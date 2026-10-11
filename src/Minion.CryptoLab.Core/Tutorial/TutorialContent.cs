@@ -520,7 +520,19 @@ public static class TutorialContent
             "the PREVIOUS block's ciphertext first (and the very first block is XOR-ed with a " +
             "random \"initialization vector,\" the IV). Now every block's output depends on every " +
             "block that came before it — two identical plaintext blocks encrypt to different " +
-            "ciphertext, because their chaining history differs.",
+            "ciphertext, because their chaining history differs. \"Depends on\" shouldn't be taken " +
+            "on faith — here's the exact chain, computed for real, with real AES, so you can check " +
+            "every step yourself:",
+            CbcWalkthrough(),
+            "Notice block 1's input (\"IV XOR P1\") came out identical to P1 itself — that's because " +
+            "this walkthrough deliberately used an all-zero IV, so you could follow the arithmetic " +
+            "without a third random-looking value to track. But that's also a real, serious mistake: " +
+            "an all-zero (or any fixed, reused) IV means the FIRST block of CBC gets no chaining " +
+            "protection at all — two different messages that happen to start with the same 16 bytes " +
+            "would produce the exact same first ciphertext block, exactly the pattern-leak CBC exists " +
+            "to prevent. A real IV must be random and different for every single message — the live " +
+            "demo below reuses a zero IV too, purely so its output stays reproducible for this " +
+            "lesson, never do this in real code.",
             "The demo below runs real AES on text with a deliberately repeated chunk, under both " +
             "modes, and shows you each resulting 16-byte block. Watch what happens to the repeated " +
             "blocks."
@@ -548,6 +560,50 @@ public static class TutorialContent
         }
     };
 
+    /// <summary>A real, computed, block-by-block CBC trace: IV XOR P1 -> AES -> C1, then
+    /// C1 XOR P2 -> AES -> C2. Uses a raw single-block AES encryptor (no padding) since each step
+    /// here really is exactly one 16-byte block — confirmed against .NET's own CBC implementation
+    /// to produce byte-identical output before this was written up.</summary>
+    private static string CbcWalkthrough()
+    {
+        var key = ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key");
+        var iv = ModernCrypto.ZeroIv16;
+        var p1 = System.Text.Encoding.UTF8.GetBytes("ATTACKATDAWNNOW!");
+        var p2 = System.Text.Encoding.UTF8.GetBytes("SENDMORETROOPS!!");
+
+        var block1Input = ClassicalCiphers.Xor(iv, p1);
+        var c1 = AesRawBlockEncrypt(block1Input, key);
+        var block2Input = ClassicalCiphers.Xor(c1, p2);
+        var c2 = AesRawBlockEncrypt(block2Input, key);
+
+        string H(byte[] b) => Convert.ToHexString(b).ToLowerInvariant();
+        string Row(string label, string value) => label.PadRight(38) + value;
+
+        return string.Join("\n", new[]
+        {
+            Row("IV (all zero — see the note below):", H(iv)),
+            Row("Plaintext block 1 (\"ATTACKATDAWNNOW!\"):", H(p1)),
+            Row("Block 1 input = IV XOR P1:", H(block1Input)),
+            Row("Ciphertext block 1 = AES(input):", H(c1)),
+            "",
+            Row("Plaintext block 2 (\"SENDMORETROOPS!!\"):", H(p2)),
+            Row("Block 2 input = C1 XOR P2:", H(block2Input)),
+            Row("Ciphertext block 2 = AES(input):", H(c2))
+        });
+    }
+
+    /// <summary>Encrypts exactly one 16-byte block with no padding — used only to show CBC's
+    /// internal chaining math one block at a time (real AesCbcEncrypt is used everywhere else).</summary>
+    private static byte[] AesRawBlockEncrypt(byte[] block, byte[] key)
+    {
+        using var aes = System.Security.Cryptography.Aes.Create();
+        aes.Key = key;
+        aes.Mode = System.Security.Cryptography.CipherMode.ECB;
+        aes.Padding = System.Security.Cryptography.PaddingMode.None;
+        using var encryptor = aes.CreateEncryptor();
+        return encryptor.TransformFinalBlock(block, 0, block.Length);
+    }
+
     private static IReadOnlyList<string> ToBlockHexList(byte[] data)
     {
         var blocks = new List<string>();
@@ -561,28 +617,65 @@ public static class TutorialContent
 
     // ---------------------------------------------------------------- 12. Authenticated encryption
 
+    private static readonly byte[] GcmDemoKey = ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key");
+    private static readonly byte[] GcmDemoNonce = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }; // 12 bytes — GCM's standard nonce size
+
     private static TutorialStep Step12AuthenticatedEncryption() => new()
     {
         Title = "CBC still isn't the whole story: authenticated encryption",
         Paragraphs = new[]
         {
             "CBC solves the pattern-leak problem, but it has its own sharp edges. It needs a " +
-            "random, unpredictable IV for every single message (reusing one undoes the chaining " +
-            "benefit for the first block), and — critically — CBC alone provides zero protection " +
-            "against TAMPERING. An attacker who can flip bits in a CBC ciphertext can make " +
-            "predictable, controlled changes to the decrypted plaintext, without needing the key at " +
-            "all. Confidentiality (can't read it) and integrity (can't silently alter it) are " +
-            "different properties, and CBC alone only gives you the first.",
+            "random, unpredictable IV for every single message (Lesson 11's closing note showed " +
+            "exactly why), and — critically — CBC alone provides zero protection against TAMPERING. " +
+            "An attacker who can flip bits in a CBC ciphertext can make predictable, controlled " +
+            "changes to the decrypted plaintext, without needing the key at all. Confidentiality " +
+            "(can't read it) and integrity (can't silently alter it) are different properties, and " +
+            "CBC alone only gives you the first.",
             "Modern practice has mostly moved to modes built to give you both at once: GCM " +
-            "(Galois/Counter Mode) is the big one — it's a stream-cipher-style mode (built on a " +
-            "counter, conceptually similar to generating a one-time-pad-like keystream from the key " +
-            "and a nonce) that ALSO produces an authentication tag, so any tampering with the " +
-            "ciphertext is detected and rejected automatically. If you see \"AES-GCM\" in modern " +
-            "documentation, this is why it's recommended over plain CBC.",
-            "GCM has its own absolute rule, though, echoing Lesson 9 almost exactly: never reuse a " +
-            "nonce with the same key. Do that even once and GCM's authentication guarantee " +
-            "collapses completely — the exact same two-time-pad math from before, just wearing a " +
-            "2020s outfit. You'll see this exact mistake as a Lab scenario."
+            "(Galois/Counter Mode) is the big one — internally it's a stream-cipher-style mode: a " +
+            "keystream is generated from the key plus a per-message NONCE (\"number used once\" — " +
+            "the GCM term for what CBC calls an IV) and XOR-ed with the plaintext, conceptually a " +
+            "one-time pad where the \"random\" key comes from AES instead of true randomness. It ALSO " +
+            "computes an authentication tag over the ciphertext, so any tampering is detected and " +
+            "rejected automatically — the exact protection CBC alone doesn't have.",
+            "And because it's really just a keystream XOR, GCM inherits the two-time-pad math from " +
+            "Lesson 9 exactly, bug for bug: reuse the same key+nonce pair for two different " +
+            "messages and the keystream cancels out of their ciphertexts the same way a reused " +
+            "one-time-pad key did. No tag, no CBC, no AES internals involved in seeing it happen — " +
+            "just real AES-GCM, run twice with the mistake baked in:"
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "Message 1",
+            KeyLabel = "Message 2 (both \"encrypted\" with the SAME hidden AES-GCM key AND the same reused nonce)",
+            DefaultInput = "TRANSFER 100 TO BOB ACCOUNT NOW",
+            DefaultKey = "MEETING MOVED TO THREE PM TODAY",
+            Transform = (p1, p2) =>
+            {
+                var b1 = System.Text.Encoding.UTF8.GetBytes(p1);
+                var b2 = System.Text.Encoding.UTF8.GetBytes(p2);
+                var c1 = ModernCrypto.AesGcmEncrypt(b1, GcmDemoKey, GcmDemoNonce, out _);
+                var c2 = ModernCrypto.AesGcmEncrypt(b2, GcmDemoKey, GcmDemoNonce, out _);
+                var len = Math.Min(c1.Length, c2.Length);
+                var xorOfCiphertexts = ClassicalCiphers.Xor(c1[..len], c2[..len]);
+                var xorOfPlaintexts = ClassicalCiphers.Xor(b1[..len], b2[..len]);
+                var cHex = Convert.ToHexString(xorOfCiphertexts).ToLowerInvariant();
+                var pHex = Convert.ToHexString(xorOfPlaintexts).ToLowerInvariant();
+                return $"C1 (hex):              {Convert.ToHexString(c1).ToLowerInvariant()}\n" +
+                       $"C2 (hex):              {Convert.ToHexString(c2).ToLowerInvariant()}\n" +
+                       $"C1 XOR C2:             {cHex}\n" +
+                       $"P1 XOR P2 (for proof): {pHex}\n" +
+                       $"Identical? {(cHex == pHex ? "YES — same catastrophic key-reuse failure as Lesson 9, just with real AES-GCM" : "no")}";
+            },
+            Explain = (_, _) =>
+                "This only shows the ENCRYPTION half breaking — reusing a GCM nonce also destroys " +
+                "the authentication tag's security (it reuses the same internal \"hash key\" GCM " +
+                "derives for its tag, letting an attacker forge valid tags for altered ciphertext), " +
+                "but that math needs Galois-field arithmetic this tutorial won't derive. The " +
+                "keystream cancellation above is the real, computable half of why \"never reuse a " +
+                "nonce\" is as absolute a rule for GCM as \"never reuse a one-time pad key\" was back " +
+                "in Lesson 9 — because underneath, it's the identical mistake."
         }
     };
 
@@ -739,11 +832,44 @@ public static class TutorialContent
             KeyLabel = "Shared secret key",
             DefaultInput = "transfer $100 to bob",
             DefaultKey = "shared-secret-key",
-            Transform = (input, key) => string.IsNullOrEmpty(key) ? "Enter a key." : ModernCrypto.HmacSha256Hex(input, key),
+            Transform = (input, key) =>
+            {
+                if (string.IsNullOrEmpty(key)) return "Enter a key.";
+                if (input.Length == 0) return "Enter a message.";
+
+                var keyBytes = System.Text.Encoding.UTF8.GetBytes(key);
+                var original = System.Text.Encoding.UTF8.GetBytes(input);
+                var mutated = (byte[])original.Clone();
+                var originalLastByte = mutated[^1];
+                mutated[^1] ^= 0x01; // flip exactly ONE bit of the last byte — nothing else changes
+
+                using var hmac = new System.Security.Cryptography.HMACSHA256(keyBytes);
+                var tagOriginal = hmac.ComputeHash(original);
+                var tagMutated = hmac.ComputeHash(mutated);
+
+                var differingBits = 0;
+                for (var i = 0; i < tagOriginal.Length; i++)
+                {
+                    var diff = (byte)(tagOriginal[i] ^ tagMutated[i]);
+                    while (diff != 0) { differingBits += diff & 1; diff >>= 1; }
+                }
+                var totalBits = tagOriginal.Length * 8;
+
+                return $"Message HMAC:                    {Convert.ToHexString(tagOriginal).ToLowerInvariant()}\n" +
+                       $"Same message, last byte {originalLastByte:x2}->{mutated[^1]:x2} " +
+                       $"(one bit flipped), HMAC: {Convert.ToHexString(tagMutated).ToLowerInvariant()}\n" +
+                       $"Bits that changed: {differingBits} of {totalBits} ({(double)differingBits / totalBits:P0}) " +
+                       $"— from flipping exactly 1 of the {original.Length * 8} input bits.";
+            },
             Explain = (input, key) =>
-                "Try changing even one character of the message, or the key, and watch the entire " +
-                "HMAC output change unpredictably — there's no \"partial match\" in cryptography; a " +
-                "single altered bit anywhere produces a completely different, uncorrelated result."
+                "That one-bit change (not even a whole character — just the message's very last " +
+                "bit) still flipped roughly HALF of the 256 output bits, with no visible pattern " +
+                "connecting which input bit moved to which output bits changed. That's the " +
+                "\"avalanche effect\": every bit of a cryptographic hash/HMAC output is meant to " +
+                "depend on every bit of the input, so no attacker can predict \"if I change this " +
+                "part, that part of the output moves predictably.\" Try editing the message or key " +
+                "yourself above and recompute — you'll see the same near-50% churn every time, " +
+                "regardless of how small your edit was."
         }
     };
 
@@ -772,9 +898,114 @@ public static class TutorialContent
             "BEFORE attempting to decrypt and check its padding at all. If the HMAC doesn't match, " +
             "reject immediately and never even look at the padding — there's no oracle left to " +
             "query if the tampered message never reaches the padding check in the first place. " +
-            "Modern authenticated modes like GCM (Lesson 12) close this off by design."
+            "Modern authenticated modes like GCM (Lesson 12) close this off by design.",
+            "The demo below doesn't just describe the attack, it RUNS it — a real \"oracle\" " +
+            "function that genuinely AES-decrypts a tampered ciphertext and reports only pass/fail " +
+            "on the padding (exactly what a vulnerable server would leak), and a real attacker-side " +
+            "loop that queries it up to 256 times per byte, working backward from the last byte of " +
+            "the final block, to recover the entire block — without the attack code ever touching " +
+            "the key. Type your own message (16+ characters) and watch it recover your own last " +
+            "block, one byte at a time."
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "Secret message (16+ characters so there's a full block to attack)",
+            DefaultInput = "THE LAUNCH CODE IS 4217",
+            Transform = (input, _) => PaddingOracleAttack(input),
+            Explain = (_, _) =>
+                "Each row above is one real byte recovered purely from oracle yes/no answers: the " +
+                "attack guesses a tampered byte value (0-255), the oracle genuinely decrypts and " +
+                "checks PKCS7 padding, and the FIRST guess that validates reveals one byte of the " +
+                "real plaintext through pure XOR arithmetic — no key required. (One subtlety baked " +
+                "into the code: the very first byte guessed has to be double-checked against a " +
+                "second, unrelated tamper, because a 9-byte padding can accidentally look like a " +
+                "valid 1-byte padding — the real attack handles this, and so does this demo.) If " +
+                "your message's length is a multiple of 16, PKCS7 adds one whole extra block of pure " +
+                "padding — the recovered \"message\" will just be padding bytes; try a different " +
+                "length to recover real characters instead."
         }
     };
+
+    /// <summary>Runs a REAL CBC padding-oracle attack against a message encrypted with real AES:
+    /// an "oracle" that genuinely decrypts+validates PKCS7 padding and nothing else (exactly what a
+    /// vulnerable server leaks), queried by a real byte-by-byte recovery loop that never touches the
+    /// key. Algorithm and the pos==15 disambiguation step verified against .NET's own AES decryption
+    /// (and against the known plaintext) via an independent PowerShell reimplementation before use.</summary>
+    private static string PaddingOracleAttack(string input)
+    {
+        var plaintext = System.Text.Encoding.UTF8.GetBytes(input);
+        if (plaintext.Length < 16) return "Type a message of at least 16 characters so there's a full block to attack.";
+
+        var key = ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key");
+        var iv = ModernCrypto.ZeroIv16;
+        var ciphertext = ModernCrypto.AesCbcEncrypt(plaintext, key, iv);
+
+        var blockCount = ciphertext.Length / 16;
+        var prevStart = (blockCount - 2) * 16;
+        var targetStart = (blockCount - 1) * 16;
+        var prevOriginal = ciphertext[prevStart..(prevStart + 16)];
+        var targetBlock = ciphertext[targetStart..(targetStart + 16)];
+        var preceding = ciphertext[..prevStart];
+
+        bool OracleAccepts(byte[] tamperedPrev)
+        {
+            var trial = new byte[preceding.Length + 32];
+            preceding.CopyTo(trial, 0);
+            tamperedPrev.CopyTo(trial, preceding.Length);
+            targetBlock.CopyTo(trial, preceding.Length + 16);
+
+            using var aes = System.Security.Cryptography.Aes.Create();
+            aes.Key = key;
+            aes.IV = iv;
+            aes.Mode = System.Security.Cryptography.CipherMode.CBC;
+            aes.Padding = System.Security.Cryptography.PaddingMode.PKCS7;
+            using var decryptor = aes.CreateDecryptor();
+            try { decryptor.TransformFinalBlock(trial, 0, trial.Length); return true; }
+            catch (System.Security.Cryptography.CryptographicException) { return false; }
+        }
+
+        var intermediate = new byte[16];
+        var log = new List<string>();
+        for (var pos = 15; pos >= 0; pos--)
+        {
+            var padVal = (byte)(16 - pos);
+            var tamperedPrev = (byte[])prevOriginal.Clone();
+            for (var j = pos + 1; j <= 15; j++) tamperedPrev[j] = (byte)(intermediate[j] ^ padVal);
+
+            var foundGuess = -1;
+            for (var guess = 0; guess <= 255; guess++)
+            {
+                tamperedPrev[pos] = (byte)guess;
+                if (!OracleAccepts(tamperedPrev)) continue;
+                if (pos == 15)
+                {
+                    var disambiguate = (byte[])tamperedPrev.Clone();
+                    disambiguate[14] ^= 0xFF;
+                    if (!OracleAccepts(disambiguate)) continue; // coincidental hit, not the real padVal=1 case
+                }
+                foundGuess = guess;
+                break;
+            }
+            if (foundGuess < 0) return "The oracle never validated at byte position " + pos + " — try a different message.";
+
+            intermediate[pos] = (byte)(foundGuess ^ padVal);
+            var recoveredByte = (byte)(intermediate[pos] ^ prevOriginal[pos]);
+            var printable = recoveredByte is >= 0x20 and < 0x7F ? ((char)recoveredByte).ToString() : $"0x{recoveredByte:x2}";
+            log.Add($"byte {pos,2}: tried guesses until 0x{foundGuess:x2} validated -> recovered '{printable}'");
+        }
+
+        var recoveredBlock = new byte[16];
+        for (var i = 0; i < 16; i++) recoveredBlock[i] = (byte)(intermediate[i] ^ prevOriginal[i]);
+
+        var padLen = recoveredBlock[15];
+        var readable = padLen is >= 1 and <= 16
+            ? System.Text.Encoding.UTF8.GetString(recoveredBlock, 0, 16 - padLen)
+            : System.Text.Encoding.UTF8.GetString(recoveredBlock);
+
+        return string.Join("\n", log) +
+               $"\n\nFull recovered block (hex): {Convert.ToHexString(recoveredBlock).ToLowerInvariant()}" +
+               $"\nRecovered text (padding stripped): \"{readable}\"";
+    }
 
     // ---------------------------------------------------------------- 18. Key exchange
 

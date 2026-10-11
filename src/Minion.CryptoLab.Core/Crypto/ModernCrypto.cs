@@ -45,6 +45,17 @@ public static class ModernCrypto
         return encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length);
     }
 
+    /// <summary>Real AES-GCM encryption exposing the raw ciphertext and tag — used to demonstrate
+    /// what happens when a key+nonce pair is reused (see the authenticated-encryption tutorial step).</summary>
+    public static byte[] AesGcmEncrypt(byte[] plaintext, byte[] key, byte[] nonce, out byte[] tag)
+    {
+        var ciphertext = new byte[plaintext.Length];
+        tag = new byte[16];
+        using var gcm = new AesGcm(key, tag.Length);
+        gcm.Encrypt(nonce, plaintext, ciphertext, tag);
+        return ciphertext;
+    }
+
     public static string Md5Hex(string input) => Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
 
     public static string Sha256Hex(string input) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();

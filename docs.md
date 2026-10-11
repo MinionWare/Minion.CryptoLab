@@ -62,9 +62,14 @@ built as a working app.
 10. Block vs. stream ciphers, meet AES (concept, no demo)
 11. ECB vs. CBC *(demo: real AES, shows the actual 16-byte ciphertext
     blocks for both modes side by side — repeated plaintext blocks
-    visibly repeat under ECB, never under CBC)*
+    visibly repeat under ECB, never under CBC — PLUS a real, computed,
+    block-by-block CBC trace in the prose itself: IV XOR P1 -> AES -> C1,
+    C1 XOR P2 -> AES -> C2, with a callout on why a zero/reused IV is a
+    real vulnerability)*
 12. Authenticated encryption (GCM), and why CBC alone isn't enough
-    (concept, no demo — sets up the padding-oracle step)
+    *(demo: real AES-GCM run twice with the same key+nonce — proves
+    C1 XOR C2 == P1 XOR P2 live, the identical two-time-pad failure from
+    Lesson 9 wearing modern clothes)*
 13. Hashing vs. encryption — a completely different tool *(demo: real
     SHA-256/MD5)*
 14. Salting *(demo: the exact "two users, same password" worked example
@@ -73,9 +78,15 @@ built as a working app.
 15. Slow KDFs *(demo: REAL measured timing — raw SHA-256 loop vs. one
     PBKDF2 call, via `Stopwatch`, on the user's own machine, not an
     invented number)*
-16. HMAC — proving a message wasn't tampered with *(demo)*
+16. HMAC — proving a message wasn't tampered with *(demo: byte-level
+    avalanche effect — flips exactly one bit of the message and shows
+    ~50% of the 256 output bits change, with the real count/percentage)*
 17. The padding oracle — two earlier half-fixes combining into a real
-    exploit (concept, no demo — ties together CBC + missing integrity)
+    exploit *(demo: a REAL working padding-oracle attack — a genuine
+    AES-decrypt-and-check-PKCS7-padding "oracle" function, queried by a
+    real byte-by-byte recovery loop that recovers an entire 16-byte
+    plaintext block from nothing but pass/fail answers, key never used
+    by the attack code)*
 18. Key exchange — Diffie-Hellman *(demo: real toy modular-exponentiation
     math, small numbers, both sides' computed shared secret shown to
     match)*
@@ -98,6 +109,18 @@ being written into the C# tutorial content:
 - AES-ECB confirmed to produce byte-identical ciphertext blocks for
   byte-identical plaintext blocks; AES-CBC confirmed NOT to, on the same
   input.
+- The CBC block-by-block trace (IV XOR P1 -> AES -> C1 -> XOR P2 -> AES
+  -> C2) was computed independently in PowerShell and confirmed to match
+  .NET's own `AesCbcEncrypt` output byte-for-byte before being written
+  into the lesson text.
+- AES-GCM nonce reuse: confirmed `C1 XOR C2 == P1 XOR P2` for real
+  AES-GCM ciphertexts produced with a reused key+nonce, independently in
+  PowerShell, before writing the lesson around it.
+- The padding-oracle byte-recovery algorithm (including the pos==15
+  disambiguation step, needed because a longer real padding can
+  coincidentally look like a valid 1-byte padding) was verified against
+  a ground-truth value computed via raw single-block AES decryption, and
+  against the actual known plaintext, before being shipped as a demo.
 - PBKDF2-vs-SHA256 timing ratio measured for real (not estimated) before
   writing the lesson text describing it.
 - The toy Diffie-Hellman example's shared-secret match confirmed.
