@@ -210,6 +210,9 @@ public static class TutorialContent
             "of letters, it just starts over from its own beginning and keeps going, for as long as " +
             "the message runs. Each key letter means \"shift by this many places,\" exactly like a " +
             "Caesar shift: A=0, B=1, C=2, ... Z=25.",
+            "First, the key itself, converted to numbers the same A=0...Z=25 way — this is the " +
+            "ENTIRE source of every shift below, nothing about it is random:\n\n" +
+            "L=11   E=4   M=12   O=14   N=13\n\n" +
             "Here's the first example spelled out completely, letter by letter, key \"LEMON\" lined " +
             "up under message \"ATTACKATDAWN\" (the key repeats: L-E-M-O-N-L-E-M-O-N-L-E once it " +
             "runs out at letter 6):\n\n" +
@@ -218,9 +221,16 @@ public static class TutorialContent
             "Shift by:   11  4   12  14  13  11  4   12  14  13  11  4\n" +
             "Ciphertext: L   X   F   O   P   V   E   F   R   N   H   R\n\n" +
             "Read any one column top to bottom: plaintext 'A' (position 0 in the alphabet) shifted " +
-            "by key letter 'L' (11) lands on position 0+11=11, which is 'L'. Next column: 'T' " +
-            "(position 19) shifted by 'E' (4) lands on 19+4=23, which is 'X'. Keep going the same " +
-            "way for every column and you get the whole ciphertext: LXFOPVEFRNHR.",
+            "by key letter 'L' (11, from the legend above) lands on position 0+11=11, which is 'L'. " +
+            "Next column: 'T' (position 19) shifted by 'E' (4) lands on 19+4=23, which is 'X'. Keep " +
+            "going the same way for every column and you get the whole ciphertext: LXFOPVEFRNHR.",
+            "Look at the \"Shift by\" row again: 11, 4, 12, 14, 13, 11, 4, 12, 14, 13, 11, 4 — that's " +
+            "just L, E, M, O, N's numbers (11, 4, 12, 14, 13) repeating from the start, over and " +
+            "over, because the 5-letter key ran out and cycled back to its own beginning. It repeats " +
+            "every 5 columns because the key is 5 letters long — with only 12 columns shown here " +
+            "that's 2 full cycles plus 2 extra, which can look irregular at a glance if you're not " +
+            "counting in fives. There is nothing random anywhere in this table: every single shift " +
+            "is 100% determined by which key letter happens to land in that column.",
             "Notice plaintext 'A' shows up twice (columns 1 and 4) and becomes TWO DIFFERENT " +
             "ciphertext letters ('L' and 'P') each time, because a different key letter was " +
             "lined up underneath it both times. That's the entire mechanism that defeats plain " +
@@ -228,7 +238,8 @@ public static class TutorialContent
             "letter.",
             "One more full example, different words, so the pattern is unmistakable — message " +
             "\"HELLOWORLD\" with the short 3-letter key \"KEY\" (repeating as K-E-Y-K-E-Y-K-E-Y-K, " +
-            "three full times plus one letter):\n\n" +
+            "three full times plus one letter). Key legend first: K=10, E=4, Y=24 — and that's it, " +
+            "only three distinct shift values exist anywhere in this entire example:\n\n" +
             "Plaintext:  H   E   L   L   O   W   O   R   L   D\n" +
             "Key letter: K   E   Y   K   E   Y   K   E   Y   K\n" +
             "Shift by:   10  4   24  10  4   24  10  4   24  10\n" +
@@ -237,7 +248,9 @@ public static class TutorialContent
             "times in this message and shifts by 'Y' (24), 'K' (10), and 'Y' (24) in turn — landing " +
             "on 'J', 'V', and 'J' again. Same plaintext letter, three different ciphertext letters, " +
             "for exactly the same reason as the first example: a short key marching in lockstep " +
-            "with a longer message, wrapping back to its own start over and over.",
+            "with a longer message, wrapping back to its own start over and over. The \"Shift by\" " +
+            "row here is just 10, 4, 24 repeating every 3 columns — again, a 3-letter key, a " +
+            "3-column period, zero randomness.",
             "This single idea defeated simple frequency analysis for over 300 years and earned the " +
             "nickname \"le chiffre indéchiffrable\" — the indecipherable cipher."
         },
@@ -269,10 +282,17 @@ public static class TutorialContent
 
         string Row(string label, IEnumerable<string> cells) => $"{label,-12}" + string.Join(" ", cells.Select(c => c.PadRight(3)));
 
-        return Row("Plaintext:", letters.Select(c => c.ToString())) + "\n" +
+        var distinctKeyLetters = keyUpper.Distinct().OrderBy(c => keyUpper.IndexOf(c));
+        var legend = string.Join("   ", distinctKeyLetters.Select(c => $"{c}={c - 'A'}"));
+
+        return $"Key legend: {legend}\n\n" +
+               Row("Plaintext:", letters.Select(c => c.ToString())) + "\n" +
                Row("Key letter:", keyLetters.Select(c => c.ToString())) + "\n" +
                Row("Shift by:", shifts.Select(s => s.ToString())) + "\n" +
-               Row("Ciphertext:", cipherLetters.Select(c => c.ToString()));
+               Row("Ciphertext:", cipherLetters.Select(c => c.ToString())) + "\n\n" +
+               $"The \"Shift by\" row is just those {keyUpper.Distinct().Count()} numbers from the " +
+               $"legend above, repeating every {keyUpper.Length} column(s) — nothing random, it's " +
+               "entirely determined by which key letter cycles into that position.";
     }
 
     // ---------------------------------------------------------------- 7. Kasiski
