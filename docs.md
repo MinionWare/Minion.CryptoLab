@@ -111,9 +111,25 @@ built as a working app.
     match, PLUS a real brute-force eavesdropper demo that searches every
     possible secret 1..p-1 and recovers it in a handful of guesses —
     concretely showing why only a tiny p makes that attack feasible)*
+18b. Public/private keys — RSA *(a full padlock-scene analogy mapped
+    piece by piece to the digital version; a from-scratch totient
+    explanation with its own worked example and an Euler's-theorem
+    numeric check; a fully worked toy RSA key generation and
+    encrypt/decrypt; a real toy-scale attack that factors the public
+    modulus back into its two primes and rebuilds the private key,
+    explaining why real keys need enormous primes; demo: a REAL 2048-bit
+    RSA key pair via .NET's own `RSA` class — real OAEP-padded encrypt/
+    decrypt of whatever you type, showing the real modulus size, public
+    exponent, and ciphertext byte length, with a second run proving the
+    ciphertext is different every time due to OAEP's randomization)*
 19. Randomness — PRNG vs. CSPRNG *(demo: a seeded `Random` reliably
     repeats; `RandomNumberGenerator` never does)*
 20. Wrap-up — pointer to the (not yet built) Lab catalog and Quiz Mode
+
+Lessons 20+ (signatures, certificates/PKI and what a CA verification
+process actually involves, a symmetric/asymmetric-primitive compatibility
+matrix, and dedicated salt/pepper/nonce/IV and padding-math lessons) are
+planned next, not yet built.
 
 ## Verification approach
 
@@ -155,6 +171,16 @@ being written into the C# tutorial content:
 - The Diffie-Hellman brute-force eavesdropper demo was verified to
   recover the correct secret (or an equivalent colliding one) in
   PowerShell before being added as a live Explain computation.
+- The toy RSA example (p=5, q=11, e=7, d=23) and its factor-the-modulus
+  attack were independently verified in PowerShell, including the
+  totient worked example (phi(10)=4, brute-force confirmed) and a
+  concrete numeric check of Euler's theorem (3^4 mod 10 = 1) before
+  either was written into the lesson text.
+- The real 2048-bit RSA demo's claim that OAEP padding makes ciphertext
+  differ run-to-run (same plaintext, same key) was confirmed via a
+  throwaway console harness before shipping, alongside a full run of
+  every tutorial step to catch regressions from inserting a new lesson
+  mid-sequence.
 - PBKDF2-vs-SHA256 timing ratio measured for real (not estimated) before
   writing the lesson text describing it.
 - The toy Diffie-Hellman example's shared-secret match confirmed.

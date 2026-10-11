@@ -32,6 +32,7 @@ public static class TutorialContent
         Step16Hmac(),
         Step17PaddingOracle(),
         Step18KeyExchange(),
+        Step18bPublicPrivateKeys(),
         Step19Randomness(),
         Step20WrapUp()
     };
@@ -1313,6 +1314,165 @@ public static class TutorialContent
         }
         return result;
     }
+
+    // ---------------------------------------------------------------- 18b. Public/private keys (RSA)
+
+    private static readonly Lazy<System.Security.Cryptography.RSA> RealRsaDemoKey =
+        new(() => System.Security.Cryptography.RSA.Create(2048));
+
+    private static TutorialStep Step18bPublicPrivateKeys() => new()
+    {
+        Title = "A key that can't undo its own lock: public and private keys",
+        Paragraphs = new[]
+        {
+            "Diffie-Hellman (last lesson) solves ONE specific problem: two people who both show up " +
+            "at the same time can agree on a shared secret in front of an eavesdropper. But what if " +
+            "someone wants to send YOU something secret without either of you being online at the " +
+            "same moment at all — say, encrypting a file to leave for you, using nothing but a key " +
+            "you posted publicly somewhere, with you reading it hours or days later? That needs a " +
+            "completely different kind of key — one that comes in two parts that do different jobs, " +
+            "instead of one shared secret both sides hold equally.",
+            "Here's the scene, start to finish, before any math at all. You want to be able to " +
+            "receive secret notes from anyone — a friend, a stranger, anyone — sent through the " +
+            "mail, where anybody along the way could grab the package and look inside.\n\n" +
+            "So you buy a padlock. Here's the one fact that makes this whole thing work, and it's " +
+            "true of a REAL physical padlock, no trick involved: locking it needs no key at all. You " +
+            "just push the shackle in until it clicks shut. Anyone can do that, with zero " +
+            "information. Only opening it needs the key — one specific physical key, cut to match " +
+            "that one padlock.\n\n" +
+            "You take that key and put it on a chain around your own neck. It never comes off, never " +
+            "gets copied, never gets mailed anywhere.\n\n" +
+            "The padlock itself — unlocked, open, ready to snap shut — you make as many copies of as " +
+            "you want, and hand them out to absolutely anyone who asks. Your friend. A stranger. " +
+            "Someone you don't even trust. It doesn't matter, because an open padlock sitting in " +
+            "someone's hand can't do anything dangerous by itself — all it can do is get snapped " +
+            "shut, and snapping it shut is the one thing that needs no key.\n\n" +
+            "Your friend wants to send you a note. They write it, put it in a box, and snap one of " +
+            "your padlocks shut on the box. Notice what just happened: they needed no key to do " +
+            "that. And notice something else — your friend can no longer open that box either. They " +
+            "just locked themselves out of their own note, using nothing but a padlock you handed " +
+            "out for free.\n\n" +
+            "They mail the box. Anyone who intercepts it along the way sees a locked box and is in " +
+            "the exact same position your friend is: they can push the shackle, sure, but they can't " +
+            "pull it open, because they don't have the one key on the chain around your neck.\n\n" +
+            "The box arrives. You take the one key only you have, unlock it, and read the note.",
+            "Mapping that scene to the digital version, piece by piece:\n\n" +
+            "- The padlock you hand out to anyone -> your PUBLIC key. Handing it to your worst " +
+            "enemy is fine — it was never a secret, and was never meant to be one.\n" +
+            "- Snapping the padlock shut (no key needed) -> ENCRYPTING with the public key — " +
+            "running the message through the public key's numbers.\n" +
+            "- The one key on the chain around your neck -> your PRIVATE key. (In Windows, you can " +
+            "go further than just keeping it safe — a certificate's private key can be flagged " +
+            "non-exportable right in the OS, so there's no copy command that ever gets it off the " +
+            "machine at all.)\n" +
+            "- Only that one key opening that one padlock -> only the PRIVATE key's numbers can " +
+            "reverse what the public key's numbers did. Not \"won't\" — can't. The information " +
+            "needed to reverse it was never in the public copy to begin with.\n" +
+            "- Anyone being able to have a copy of the open padlock -> public keys are meant to be " +
+            "given to literally anyone, including people you don't trust.",
+            "Now the real numbers — what's actually different about the two \"keys\" — but first, one " +
+            "building-block number that shows up in a second: the TOTIENT of a number n (written " +
+            "φ(n), \"Euler's totient,\" 1760s) is just a count: how many whole numbers from 1 up " +
+            "to n share NO common factor with n? Small example first: n=10. The numbers 1-9 are " +
+            "1,2,3,4,5,6,7,8,9. Cross out anything sharing a factor with 10 (10=2x5): 2, 4, 6, 8 all " +
+            "share a factor of 2; 5 shares a factor of 5. What's left: 1, 3, 7, 9 — four numbers. So " +
+            "φ(10)=4. Handy shortcut when n is two primes multiplied together: (2-1)x(5-1) = " +
+            "1x4 = 4 — same answer, no counting needed. That shortcut is why φ(55) = " +
+            "(5-1)x(11-1) = 4x10 = 40 further down, without checking all 54 numbers by hand (it was " +
+            "checked by computer before writing this, and the brute-force count really is 40).",
+            "Why does this counting exercise matter for encryption at all? Because of a real, proven " +
+            "mathematical fact (Euler's theorem): raise ANY number m that shares no factor with n up " +
+            "to the power of φ(n), then take the result mod n, and you always land on exactly 1 " +
+            "— no matter what m is. Check it concretely: m=3, n=10, φ(10)=4 -> 3^4 mod 10 = 81 " +
+            "mod 10 = 1. Exactly 1. That single fact is the entire reason picking e and d so that " +
+            "(e x d) mod φ(n) = 1 makes \"encrypt then decrypt\" land you back on the original " +
+            "message — e x d works out to some multiple of φ(n) plus exactly 1 left over, and " +
+            "that leftover +1 is the only part that survives once everything else cancels out via " +
+            "Euler's theorem.",
+            "Okay — the actual key generation. Pick two small primes: p=5, q=11. Multiply: n = 5 x " +
+            "11 = 55 — this number ends up in BOTH keys, it's the \"size of the padlock,\" shared, " +
+            "not secret by itself. Compute the totient: (5-1)x(11-1) = 40 (used only to build the " +
+            "keys, then it must never be shared again — see the attack below for exactly why).\n\n" +
+            "Pick a small public number e=7. Find a number d where (e x d) mod 40 = 1 — that number " +
+            "is d=23, because 7 x 23 = 161, and 161 mod 40 = 1.\n\n" +
+            "  Public key (the padlock):      n=55, e=7\n" +
+            "  Private key (the chain key):   n=55, d=23\n\n" +
+            "Both have 55. The ENTIRE difference between \"can only lock\" and \"can unlock\" is one " +
+            "number: e=7 vs. d=23.",
+            "Snapping the padlock shut, for real: message = 9. Encrypt with the public pair: " +
+            "9^7 mod 55 = 4. Send 4.\n\n" +
+            "Opening it with the one real key: decrypt with the private pair: 4^23 mod 55 = 9. Back " +
+            "to the original message.\n\n" +
+            "Proof the public key really can't open it: try \"decrypting\" that same 4 using the " +
+            "PUBLIC number instead of the private one — 4^7 mod 55 = 49. Not 9. Garbage — because " +
+            "the public key never contained 23 anywhere, so there's nothing in it capable of " +
+            "reversing the lock.\n\n" +
+            "One more, so it repeats: message = 3. Public pair encrypts: 3^7 mod 55 = 42. Private " +
+            "pair decrypts: 42^23 mod 55 = 3. Same padlock, same chain key, every time.",
+            "Here's exactly what survives after key generation and what doesn't, and why that split " +
+            "is safe: n is published, part of both keys. p, q, and the totient (40) must never be " +
+            "shared — not because they're \"used up,\" but because they're AS dangerous as d itself. " +
+            "Watch what happens when an attacker who has ONLY the public key (n=55, e=7 — nothing " +
+            "else) tries to rebuild the private key from scratch:\n\n" +
+            "  Step 1 - factor n:        55 = 5 x 11          (found instantly, just try 2,3,4,5...)\n" +
+            "  Step 2 - rebuild totient: (5-1) x (11-1) = 40\n" +
+            "  Step 3 - rebuild d:       same search as before -> d=23\n" +
+            "  Step 4 - decrypt a\n" +
+            "            stolen ciphertext (4): 4^23 mod 55 = 9   <- fully cracked, no private key ever handed over\n\n" +
+            "That took a computer a fraction of a millisecond, because factoring 55 means just " +
+            "trying small numbers until one divides evenly. This is the ENTIRE reason real RSA keys " +
+            "use enormous primes — not 1-2 digits like this demo, but roughly 300 digits each, " +
+            "making n around 600 digits long. The math you just watched happen IS exactly the math " +
+            "real RSA runs — multiply two primes, same formulas, same steps — only the size " +
+            "changes. Factoring a 600-digit number back into its two primes is believed to need far " +
+            "more computing power than humanity has ever built; the current real-world record for " +
+            "factoring a number anywhere near that range (\"RSA-250,\" a 250-digit number) took " +
+            "roughly the equivalent of 2,700 years of one computer running nonstop — and a real " +
+            "2048-bit key's modulus is still dramatically larger than that record."
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "A message to encrypt with a REAL 2048-bit RSA key pair",
+            DefaultInput = "meet me at midnight",
+            Transform = (input, _) =>
+            {
+                var rsa = RealRsaDemoKey.Value;
+                var publicKeyBase64 = Convert.ToBase64String(rsa.ExportSubjectPublicKeyInfo());
+                var exponentBytes = rsa.ExportParameters(false).Exponent!;
+                var exponentValue = exponentBytes.Aggregate(0L, (acc, b) => (acc << 8) | b);
+
+                var plaintextBytes = System.Text.Encoding.UTF8.GetBytes(input);
+                var ciphertext = rsa.Encrypt(plaintextBytes, System.Security.Cryptography.RSAEncryptionPadding.OaepSHA256);
+                var ciphertextBase64 = Convert.ToBase64String(ciphertext);
+                var decryptedText = System.Text.Encoding.UTF8.GetString(
+                    rsa.Decrypt(ciphertext, System.Security.Cryptography.RSAEncryptionPadding.OaepSHA256));
+
+                var approxDigits = (int)Math.Round(rsa.KeySize * Math.Log10(2));
+
+                return $"Public key modulus size: {rsa.KeySize} bits (~{approxDigits} decimal digits — our toy n=55 was 2 digits)\n" +
+                       $"Public exponent (e): {exponentValue}  <- same role as e=7 above, just a fixed real-world choice\n" +
+                       $"Public key file (base64, truncated): {publicKeyBase64[..Math.Min(60, publicKeyBase64.Length)]}... ({publicKeyBase64.Length} characters total)\n\n" +
+                       $"Your message: \"{input}\" ({plaintextBytes.Length} bytes)\n" +
+                       $"Encrypted (base64, truncated): {ciphertextBase64[..Math.Min(60, ciphertextBase64.Length)]}... ({ciphertextBase64.Length} characters, always {ciphertext.Length} bytes for this key size)\n" +
+                       $"Decrypted with the real private key: \"{decryptedText}\"\n" +
+                       $"Match: {(decryptedText == input ? "YES" : "no")}";
+            },
+            Explain = (_, _) =>
+                "Same operation as the toy example above — encrypt with the public pair, decrypt " +
+                "with the private pair — just with numbers around 600 digits long instead of 2, " +
+                "which is why the ciphertext is a long unreadable block instead of a single small " +
+                "number. Run this again (or retype the exact same message) and the ciphertext comes " +
+                "out COMPLETELY different each time, even though the message didn't change — real " +
+                "RSA mixes in random padding bytes before encrypting (called OAEP, a different kind " +
+                "of \"padding\" than the block-alignment padding from Lesson 11/17 — same word, " +
+                "unrelated problem: without this randomness, the exact same message would always " +
+                "produce the exact same ciphertext, which leaks information on its own). The public " +
+                "exponent is a real, extremely common industry choice (65537) — not because it's " +
+                "mathematically special, but because in binary it's 10000000000000001 (only two " +
+                "1-bits), which makes the repeated-squaring math this tutorial has used since the " +
+                "Diffie-Hellman lesson run faster."
+        }
+    };
 
     // ---------------------------------------------------------------- 19. Randomness
 
