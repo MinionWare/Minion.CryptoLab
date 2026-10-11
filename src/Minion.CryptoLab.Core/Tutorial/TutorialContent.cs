@@ -382,17 +382,88 @@ public static class TutorialContent
         Title = "The bit-level version: XOR and the one-time pad",
         Paragraphs = new[]
         {
-            "Computers don't see letters — they see bits. XOR (\"exclusive or\") is a simple bit " +
-            "operation: 0⊕0=0, 1⊕1=0, 0⊕1=1, 1⊕0=1 — it's 1 exactly when the two inputs differ. " +
-            "XOR-ing data with a repeating key, one byte at a time, is the exact same idea as " +
-            "Vigenère, just operating on bits instead of letters. And XOR has a wonderful property: " +
-            "XOR-ing the output with the same key again gets you back the original — the same " +
-            "operation encrypts AND decrypts.",
-            "Now take that idea to its logical extreme: what if the \"key\" is exactly as long as " +
-            "the message, made of truly random bits, and used exactly once, ever? That's the " +
-            "one-time pad — and it is mathematically, provably unbreakable. Not \"unbreakable with " +
-            "today's computers\" — unbreakable, full stop, even with infinite computing power, " +
-            "because every possible plaintext is equally consistent with the ciphertext.",
+            "Everything from here on works on BITS, not letters — the 0s and 1s a computer actually " +
+            "stores. If you've never worked with bits or binary before, start here, slowly, because " +
+            "every remaining lesson in this tutorial builds on this one operation.",
+            "XOR (\"exclusive or\") takes two single bits and produces one bit back. It asks exactly " +
+            "one question: ARE THE TWO INPUT BITS DIFFERENT? If yes, the result is 1. If they're the " +
+            "same, the result is 0. That is the ENTIRE rule — there is nothing else to it. Written " +
+            "out as every possible case (only four exist, since a bit is only ever 0 or 1):\n" +
+            "\n" +
+            "  Bit A   Bit B   A XOR B   (same as each other?)\n" +
+            "    0       0        0      yes -> 0\n" +
+            "    0       1        1      no  -> 1\n" +
+            "    1       0        1      no  -> 1\n" +
+            "    1       1        0      yes -> 0",
+            "Now the part that makes XOR useful for a cipher: XOR-ing a result with the SAME bit " +
+            "again always undoes it, for both possible keys, with no exceptions — because there are " +
+            "only four cases total, we can just check every single one, by hand:\n" +
+            "\n" +
+            "  Plain(P)  Key(K)  Encrypt: C=P XOR K  Decrypt: C XOR K   Got P back?\n" +
+            "     0        0            0                 0               yes\n" +
+            "     0        1            1                 0               yes\n" +
+            "     1        0            1                 1               yes\n" +
+            "     1        1            0                 1               yes\n" +
+            "\n" +
+            "Look at the \"Decrypt\" column: it's identical to the original \"Plain\" column, every " +
+            "single time, no matter what P or K were. That's not a coincidence that happens to work " +
+            "for these numbers — it's EVERY possible case for a single bit, so there's nothing left " +
+            "to be wrong. That is the entire mathematical proof that \"XOR the same key twice\" always " +
+            "gets you back to where you started.",
+            "A letter isn't one bit, though — it's a whole BYTE, 8 bits glued together, and XOR just " +
+            "does the exact same single-bit operation 8 times, once per matching position, completely " +
+            "independently. Take the letter 'H' and XOR it with the letter 'o' used as a one-byte " +
+            "\"key\" — first, their bits (every letter has a fixed binary code; 'H' is always " +
+            "01001000, 'o' is always 01101111):\n" +
+            "\n" +
+            "  'H' (plaintext):  0 1 0 0 1 0 0 0\n" +
+            "  'o' (key):        0 1 1 0 1 1 1 1\n" +
+            "  XOR, bit by bit:  0 0 1 0 0 1 1 1   <- compare each column above using the table higher up\n" +
+            "\n" +
+            "Read the 8 result bits left to right as one byte: 00100111. Converted from binary, that's " +
+            "the number 39, which is the character ' (an apostrophe) — scrambled, unreadable as " +
+            "'H', exactly what we want from encryption.",
+            "Now undo it — decrypt by XOR-ing that SAME result with the SAME key again, bit by bit, " +
+            "no different operation needed:\n" +
+            "\n" +
+            "  00100111 (ciphertext, the apostrophe):  0 0 1 0 0 1 1 1\n" +
+            "  'o' (the same key again):                0 1 1 0 1 1 1 1\n" +
+            "  XOR, bit by bit:                         0 1 0 0 1 0 0 0\n" +
+            "\n" +
+            "Read those 8 bits: 01001000 = 72 = 'H'. Back to the original letter, using the identical " +
+            "XOR operation both times — nothing marked \"decrypt mode,\" nothing reversed, just XOR " +
+            "with the same key a second time.",
+            "One letter is a good start, but a real message is a short STRING of letters, each one " +
+            "XOR-ed with its own key byte in the same position. Keeping it short on purpose: encrypt " +
+            "\"HI\" (2 letters) with the 2-letter key \"ok\" — 'H' pairs with 'o' (worked out above, " +
+            "giving the apostrophe), and 'I' pairs with 'k':\n" +
+            "\n" +
+            "  'I' (plaintext):  0 1 0 0 1 0 0 1\n" +
+            "  'k' (key):        0 1 1 0 1 0 1 1\n" +
+            "  XOR, bit by bit:  0 0 1 0 0 0 1 0\n" +
+            "\n" +
+            "That byte, 00100010, is 34 — the character \" (a double quote). So \"HI\" XOR \"ok\", " +
+            "letter by letter, byte by byte, gives you two punctuation marks: the apostrophe from " +
+            "before, then this double quote — ciphertext \"'\\\"\" (both characters together). Nothing " +
+            "about those symbols looks like \"HI\" at all, yet every bit of the transformation was " +
+            "just the same four-row table from the very top of this lesson, applied 16 times (8 bits " +
+            "x 2 letters).",
+            "Decrypting the string works exactly like decrypting the single letter: XOR each " +
+            "ciphertext byte with the SAME key byte that encrypted it, in the SAME position. " +
+            "apostrophe XOR 'o' gives back 'H' (already shown above); double-quote XOR 'k' gives " +
+            "back 'I' the same way. Two letters, two independent 8-bit XOR operations, each one " +
+            "undoing itself for exactly the reason the single-bit table proved.",
+            "XOR-ing data with a repeating key, one byte at a time — reusing \"ok\" over and over for " +
+            "a longer message the way \"LEMON\" repeated over and over in Vigenère — is the EXACT same " +
+            "idea as Vigenère, just operating on raw bits instead of letters-mod-26. The live demo " +
+            "below does exactly this, on whatever you type, and shows you the real ciphertext bytes " +
+            "as hex.",
+            "Now take the repeating-key idea to its logical extreme: what if the \"key\" is exactly " +
+            "as long as the message, made of truly random bits, and used exactly once, ever — never " +
+            "repeated at all? That's the one-time pad — and it is mathematically, provably " +
+            "unbreakable. Not \"unbreakable with today's computers\" — unbreakable, full stop, even " +
+            "with infinite computing power, because every possible plaintext is equally consistent " +
+            "with the ciphertext.",
             "That's a remarkable guarantee — with three conditions that are brutally hard to " +
             "satisfy in practice: the key must be truly random (not computer-generated " +
             "pseudo-randomness), it must be as long as the entire message, and it must NEVER be " +
@@ -413,12 +484,24 @@ public static class TutorialContent
                 return Convert.ToHexString(ClassicalCiphers.Xor(data, keyBytes)).ToLowerInvariant();
             },
             Explain = (input, key) =>
-                "This is raw bytes now, shown as hex, not letters — XOR doesn't respect the " +
-                "alphabet the way Caesar/Vigenère do, it just flips bits. If this key were truly " +
-                "random, exactly as long as the message, and used only this once, this ciphertext " +
-                "would be a genuine one-time pad: provably unbreakable."
+            {
+                if (string.IsNullOrEmpty(key) || input.Length == 0) return "Enter a message and a key.";
+                var p = (byte)input[0];
+                var k = (byte)key[0];
+                var c = (byte)(p ^ k);
+                return "This is raw bytes now, shown as hex, not letters — XOR doesn't respect the " +
+                       "alphabet the way Caesar/Vigenère do, it just flips bits. Exactly like the " +
+                       "'H'/'o' example above, here's your own first letter worked out the same way:\n\n" +
+                       $"  '{(char)p}' (plaintext):  {ToBitsSpaced(p)}\n" +
+                       $"  '{(char)k}' (key):        {ToBitsSpaced(k)}\n" +
+                       $"  XOR, bit by bit:  {ToBitsSpaced(c)}   = 0x{c:x2} (first byte of the hex above)\n\n" +
+                       "If this key were truly random, exactly as long as the message, and used only " +
+                       "this once, this ciphertext would be a genuine one-time pad: provably unbreakable.";
+            }
         }
     };
+
+    private static string ToBitsSpaced(byte b) => string.Join(" ", Convert.ToString(b, 2).PadLeft(8, '0').ToCharArray());
 
     // ---------------------------------------------------------------- 9. Two-time pad
 
