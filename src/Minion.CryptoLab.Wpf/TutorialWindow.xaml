@@ -30,7 +30,8 @@
                 <ItemsControl ItemsSource="{Binding CurrentStep.Paragraphs, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Mode=OneTime}" Style="{StaticResource Text.Body}" Margin="0,0,0,12"/>
+                            <TextBlock Text="{Binding Mode=OneTime}" Style="{StaticResource Text.Body}" Margin="0,0,0,12"
+                                       FontFamily="{Binding Mode=OneTime, Converter={StaticResource MultilineToFontConverter}}"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -55,7 +56,7 @@
                                      Foreground="{DynamicResource Brush.CodeText}" AcceptsReturn="True"/>
                         </Border>
 
-                        <TextBlock Text="{Binding DemoExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12"/>
+                        <TextBlock Text="{Binding DemoExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12" FontFamily="{Binding DemoExplain, Mode=OneWay, Converter={StaticResource MultilineToFontConverter}}"/>
                     </StackPanel>
                 </Border>
 
@@ -91,7 +92,7 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <TextBlock Text="{Binding FrequencyExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12"/>
+                        <TextBlock Text="{Binding FrequencyExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12" FontFamily="{Binding FrequencyExplain, Mode=OneWay, Converter={StaticResource MultilineToFontConverter}}"/>
                     </StackPanel>
                 </Border>
 
@@ -135,7 +136,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <TextBlock Text="{Binding BlockPatternExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12"/>
+                        <TextBlock Text="{Binding BlockPatternExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12" FontFamily="{Binding BlockPatternExplain, Mode=OneWay, Converter={StaticResource MultilineToFontConverter}}"/>
                     </StackPanel>
                 </Border>
             </StackPanel>

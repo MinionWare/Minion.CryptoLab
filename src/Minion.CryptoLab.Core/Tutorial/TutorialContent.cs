@@ -205,27 +205,75 @@ public static class TutorialContent
         {
             "If a FIXED substitution leaks frequency, what if the substitution changed every " +
             "letter? The Vigenère cipher (1553) does exactly that: a repeating keyword picks a " +
-            "different Caesar shift for each letter in turn. Key \"LEMON\" means: shift the 1st " +
-            "letter by L (11), the 2nd by E (4), the 3rd by M (12), and so on, looping the keyword " +
-            "for as long as the message runs.",
+            "different Caesar shift for each letter in turn — letter 1 of the message shifts by " +
+            "letter 1 of the key, letter 2 by letter 2 of the key, and so on. Once the key runs out " +
+            "of letters, it just starts over from its own beginning and keeps going, for as long as " +
+            "the message runs. Each key letter means \"shift by this many places,\" exactly like a " +
+            "Caesar shift: A=0, B=1, C=2, ... Z=25.",
+            "Here's the first example spelled out completely, letter by letter, key \"LEMON\" lined " +
+            "up under message \"ATTACKATDAWN\" (the key repeats: L-E-M-O-N-L-E-M-O-N-L-E once it " +
+            "runs out at letter 6):\n\n" +
+            "Plaintext:  A   T   T   A   C   K   A   T   D   A   W   N\n" +
+            "Key letter: L   E   M   O   N   L   E   M   O   N   L   E\n" +
+            "Shift by:   11  4   12  14  13  11  4   12  14  13  11  4\n" +
+            "Ciphertext: L   X   F   O   P   V   E   F   R   N   H   R\n\n" +
+            "Read any one column top to bottom: plaintext 'A' (position 0 in the alphabet) shifted " +
+            "by key letter 'L' (11) lands on position 0+11=11, which is 'L'. Next column: 'T' " +
+            "(position 19) shifted by 'E' (4) lands on 19+4=23, which is 'X'. Keep going the same " +
+            "way for every column and you get the whole ciphertext: LXFOPVEFRNHR.",
+            "Notice plaintext 'A' shows up twice (columns 1 and 4) and becomes TWO DIFFERENT " +
+            "ciphertext letters ('L' and 'P') each time, because a different key letter was " +
+            "lined up underneath it both times. That's the entire mechanism that defeats plain " +
+            "frequency analysis — the same input letter no longer reliably becomes the same output " +
+            "letter.",
+            "One more full example, different words, so the pattern is unmistakable — message " +
+            "\"HELLOWORLD\" with the short 3-letter key \"KEY\" (repeating as K-E-Y-K-E-Y-K-E-Y-K, " +
+            "three full times plus one letter):\n\n" +
+            "Plaintext:  H   E   L   L   O   W   O   R   L   D\n" +
+            "Key letter: K   E   Y   K   E   Y   K   E   Y   K\n" +
+            "Shift by:   10  4   24  10  4   24  10  4   24  10\n" +
+            "Ciphertext: R   I   J   V   S   U   Y   V   J   N\n\n" +
+            "'H' (position 7) shifted by 'K' (10) is 7+10=17 → 'R'. 'L' (position 11) appears three " +
+            "times in this message and shifts by 'Y' (24), 'K' (10), and 'Y' (24) in turn — landing " +
+            "on 'J', 'V', and 'J' again. Same plaintext letter, three different ciphertext letters, " +
+            "for exactly the same reason as the first example: a short key marching in lockstep " +
+            "with a longer message, wrapping back to its own start over and over.",
             "This single idea defeated simple frequency analysis for over 300 years and earned the " +
-            "nickname \"le chiffre indéchiffrable\" — the indecipherable cipher. The same plaintext " +
-            "letter now produces different ciphertext letters depending on where it falls relative " +
-            "to the key, which smears out the frequency signature that broke substitution."
+            "nickname \"le chiffre indéchiffrable\" — the indecipherable cipher."
         },
         Demo = new CipherDemo
         {
-            InputLabel = "Message",
+            InputLabel = "Message (letters only — spaces/punctuation won't line up cleanly in the table below)",
             KeyLabel = "Keyword",
             DefaultInput = "ATTACKATDAWN",
             DefaultKey = "LEMON",
             Transform = (input, key) => string.IsNullOrEmpty(key) ? "Enter a keyword." : ClassicalCiphers.Vigenere(input, key),
-            Explain = (input, key) =>
-                $"Each letter was shifted by a different amount depending on its position and the " +
-                $"repeating keyword \"{key.ToUpperInvariant()}\" — the letter 'A' doesn't always " +
-                "become the same ciphertext letter anymore, unlike Caesar or simple substitution."
+            Explain = (input, key) => string.IsNullOrEmpty(key) ? "Enter a keyword to see the letter-by-letter breakdown." : VigenereAlignmentTable(input, key)
         }
     };
+
+    /// <summary>Renders the same Plaintext/Key/Shift/Ciphertext alignment table shown in the
+    /// worked examples above, for whatever the reader actually types — letters only, so the
+    /// columns stay lined up.</summary>
+    private static string VigenereAlignmentTable(string plaintext, string key)
+    {
+        var letters = plaintext.Where(char.IsLetter).Select(char.ToUpperInvariant).ToList();
+        if (letters.Count == 0) return "Type a message using letters to see the breakdown.";
+
+        var keyUpper = key.ToUpperInvariant();
+        var keyLetters = Enumerable.Range(0, letters.Count).Select(i => keyUpper[i % keyUpper.Length]).ToList();
+        var shifts = keyLetters.Select(k => k - 'A').ToList();
+        var cipherLetters = Enumerable.Range(0, letters.Count)
+            .Select(i => (char)('A' + ((letters[i] - 'A' + shifts[i]) % 26)))
+            .ToList();
+
+        string Row(string label, IEnumerable<string> cells) => $"{label,-12}" + string.Join(" ", cells.Select(c => c.PadRight(3)));
+
+        return Row("Plaintext:", letters.Select(c => c.ToString())) + "\n" +
+               Row("Key letter:", keyLetters.Select(c => c.ToString())) + "\n" +
+               Row("Shift by:", shifts.Select(s => s.ToString())) + "\n" +
+               Row("Ciphertext:", cipherLetters.Select(c => c.ToString()));
+    }
 
     // ---------------------------------------------------------------- 7. Kasiski
 
