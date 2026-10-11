@@ -47,19 +47,36 @@ built as a working app.
 ## The curriculum (TutorialContent.cs, 20 steps)
 
 1. What is a cipher, really? (intro, no demo)
-2. The Caesar cipher *(demo: adjustable shift)*
-3. ROT13 & Atbash — ciphers with no key at all *(demo)*
-4. Simple substitution — 26! keys, (seemingly) unbreakable *(demo)*
+2. The Caesar cipher *(demo: adjustable shift; prose includes the full
+   zero-indexing proof with a 1-26 counterexample)*
+3. ROT13 & Atbash — ciphers with no key at all *(demo; prose includes a
+   full letter-by-letter worked table for both, on "CIPHER", with the
+   arithmetic proof of why each undoes itself)*
+4. Simple substitution — 26! keys, (seemingly) unbreakable *(demo; prose
+   includes a worked "CAT"->"EQZ" lookup table and builds the 26! count
+   from first principles — 26 choices, then 25, then 24, ... — instead
+   of just stating the number)*
 5. Frequency analysis — the attack that doesn't care about keyspace size
-   *(demo: live letter-frequency bar chart)*
+   *(demo: live letter-frequency bar chart; prose includes a fully worked
+   short example — "THE TREE NEEDS WATER" Caesar-shifted and counted by
+   hand, showing the stand-in for E winning 6-to-3)*
 6. The Vigenère cipher — "le chiffre indéchiffrable" *(demo)*
 7. Kasiski examination — the key still repeats *(demo: finds and reports
    actual repeated ciphertext trigrams and their distances)*
 8. XOR and the one-time pad — provably unbreakable, under three brutal
-   conditions *(demo)*
+   conditions *(demo; prose builds XOR from the bit-level truth table up:
+   an exhaustive 4-row proof that decrypting always recovers the
+   plaintext, a byte-level 'H'/'o' worked example with real binary, and a
+   short "HI"/"ok" string example for both encrypt and decrypt; the live
+   demo's explanation renders the same bit-by-bit breakdown for whatever
+   you actually type)*
 9. The two-time pad attack — break rule #3 once and it's over *(demo:
-   proves `C1 ⊕ C2 == P1 ⊕ P2` live, with two real plaintexts)*
-10. Block vs. stream ciphers, meet AES (concept, no demo)
+   proves `C1 ⊕ C2 == P1 ⊕ P2` live, with two real plaintexts; prose
+   includes a concrete single-byte worked example of the cancellation,
+   tied back to Lesson 8's bit-level proof)*
+10. Block vs. stream ciphers, meet AES *(demo: type a message, see its
+    real byte length, block count, and leftover bytes computed live —
+    sets up why padding exists)*
 11. ECB vs. CBC *(demo: real AES, shows the actual 16-byte ciphertext
     blocks for both modes side by side — repeated plaintext blocks
     visibly repeat under ECB, never under CBC — PLUS a real, computed,
@@ -71,7 +88,9 @@ built as a working app.
     C1 XOR C2 == P1 XOR P2 live, the identical two-time-pad failure from
     Lesson 9 wearing modern clothes)*
 13. Hashing vs. encryption — a completely different tool *(demo: real
-    SHA-256/MD5)*
+    SHA-256/MD5, including a side-by-side hash of the input vs. the same
+    text repeated 500x — both produce exactly 64 hex characters, making
+    "fixed-size output, any input size" a checkable fact, not a claim)*
 14. Salting *(demo: the exact "two users, same password" worked example
     from the planning discussion — real salts generated per click,
     identical password hashed three ways)*
@@ -89,7 +108,9 @@ built as a working app.
     by the attack code)*
 18. Key exchange — Diffie-Hellman *(demo: real toy modular-exponentiation
     math, small numbers, both sides' computed shared secret shown to
-    match)*
+    match, PLUS a real brute-force eavesdropper demo that searches every
+    possible secret 1..p-1 and recovers it in a handful of guesses —
+    concretely showing why only a tiny p makes that attack feasible)*
 19. Randomness — PRNG vs. CSPRNG *(demo: a seeded `Random` reliably
     repeats; `RandomNumberGenerator` never does)*
 20. Wrap-up — pointer to the (not yet built) Lab catalog and Quiz Mode
@@ -121,6 +142,19 @@ being written into the C# tutorial content:
   coincidentally look like a valid 1-byte padding) was verified against
   a ground-truth value computed via raw single-block AES decryption, and
   against the actual known plaintext, before being shipped as a demo.
+- ROT13/Atbash letter-by-letter worked tables ("CIPHER") and the simple-
+  substitution "CAT"->"EQZ" lookup were independently computed in
+  PowerShell before being written into the lesson prose.
+- The "THE TREE NEEDS WATER" frequency-analysis worked example was
+  Caesar-shifted and letter-counted independently in PowerShell, to
+  confirm the stand-in for E actually does win the count (6 vs. 3 or
+  fewer for everything else) before being shipped as a worked example.
+- The two-time-pad single-byte worked example (`'A'`/`'B'` XOR'd with a
+  shared key byte) was verified bit-by-bit in PowerShell, including the
+  binary digits shown in the lesson text.
+- The Diffie-Hellman brute-force eavesdropper demo was verified to
+  recover the correct secret (or an equivalent colliding one) in
+  PowerShell before being added as a live Explain computation.
 - PBKDF2-vs-SHA256 timing ratio measured for real (not estimated) before
   writing the lesson text describing it.
 - The toy Diffie-Hellman example's shared-secret match confirmed.

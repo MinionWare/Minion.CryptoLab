@@ -116,15 +116,40 @@ public static class TutorialContent
         Title = "Two famous special cases",
         Paragraphs = new[]
         {
-            "ROT13 is just a Caesar shift of exactly 13 — and 13 is half of 26, so applying it " +
-            "TWICE gets you back to the original text. That makes it its own inverse: the same " +
-            "operation both encodes and decodes. It's still used today on forums to hide spoilers " +
-            "or puzzle answers from casual glances — it was never meant to be secure.",
-            "Atbash is older (it appears in the Hebrew Bible) and works differently: instead of " +
-            "shifting, it reverses the whole alphabet — A swaps with Z, B with Y, and so on. Like " +
-            "ROT13, applying it twice returns the original. Neither one has a \"key\" you can change " +
-            "at all — the rule itself is the entire secret, which is an even weaker design than " +
-            "Caesar's adjustable shift."
+            "ROT13 is just a Caesar shift of exactly 13 — nothing new mathematically, just the same " +
+            "(position + shift) mod 26 formula from Lesson 2 with the shift locked to 13 forever. " +
+            "Spelled out letter by letter on the word \"CIPHER\" (position numbers from the same " +
+            "A=0...Z=25 scheme as always):\n\n" +
+            "Letter:        C    I    P    H    E    R\n" +
+            "Position:      2    8    15   7    4    17\n" +
+            "+13:           15   21   28   20   17   30\n" +
+            "mod 26:        15   21   2    20   17   4\n" +
+            "Result:        P    V    C    U    R    E\n\n" +
+            "So ROT13(\"CIPHER\") = \"PVCURE\". Notice position 15 (\"P\" in \"+13\" row, from " +
+            "letter 'C') wrapped around at 28 mod 26 = 2, landing back on 'C' — same wraparound " +
+            "math as Caesar, just always by exactly 13.",
+            "Here's why applying it TWICE undoes it, and it's simple arithmetic, not magic: 13+13=26, " +
+            "and 26 mod 26 = 0 — shifting by 26 is the same as shifting by 0, i.e. not shifting at " +
+            "all. Run ROT13 on \"PVCURE\" (the output above) and check: 'P' is position 15, 15+13=28, " +
+            "28 mod 26 = 2 = 'C' — back to the start. Do that for all six letters and you land " +
+            "exactly back on \"CIPHER\", because every single letter made the same round trip: +13, " +
+            "then +13 again, totaling +26, totaling +0. It's still used today on forums to hide " +
+            "spoilers or puzzle answers from casual glances — it was never meant to be secure, and " +
+            "the moment someone knows it's ROT13, there's no key left to find.",
+            "Atbash is older (it appears in the Hebrew Bible) and uses a different formula: instead " +
+            "of adding a shift, it reflects each position across the middle of the alphabet — " +
+            "position p maps to position (25 - p), so A(0)<->Z(25), B(1)<->Y(24), and so on inward. " +
+            "Same word, same letter-by-letter breakdown:\n\n" +
+            "Letter:        C    I    P    H    E    R\n" +
+            "Position (p):  2    8    15   7    4    17\n" +
+            "25 - p:        23   17   10   18   21   8\n" +
+            "Result:        X    R    K    S    V    I\n\n" +
+            "Atbash(\"CIPHER\") = \"XRKSVI\". It undoes itself for an even simpler reason than ROT13: " +
+            "25 - (25 - p) = p, always, for any p — reflecting a reflection lands you back where you " +
+            "started, by definition, with no modular wraparound even needed. Check it on 'X' " +
+            "(position 23): 25-23=2='C', the original letter. Neither ROT13 nor Atbash has a \"key\" " +
+            "you can change at all — the rule itself is the entire secret, which is an even weaker " +
+            "design than Caesar's adjustable shift."
         },
         Demo = new CipherDemo
         {
@@ -145,14 +170,36 @@ public static class TutorialContent
         Title = "A much bigger keyspace: simple substitution",
         Paragraphs = new[]
         {
-            "Why stop at shifting the alphabet? A simple substitution cipher scrambles it into any " +
-            "order at all, and maps each real letter to whatever letter sits in that position. " +
-            "Caesar's shift is really just one very narrow kind of substitution — this is the " +
-            "general version.",
-            "Here's the number that should sound reassuring: there are 26! (26 factorial) possible " +
-            "scrambled alphabets — that's roughly 400,000,000,000,000,000,000,000,000 possible " +
-            "keys. Trying every single one, even at a billion attempts per second, would take far " +
-            "longer than the universe has existed. Surely THIS is unbreakable?",
+            "Why stop at shifting the alphabet by one fixed amount? A simple substitution cipher " +
+            "scrambles the WHOLE alphabet into any order at all — not \"shift everything by N,\" but " +
+            "\"a comes out as whatever letter I want, b comes out as whatever letter I want, " +
+            "independently.\" The key is the full scrambled alphabet itself, 26 letters long. " +
+            "Caesar's shift is really just one very narrow, predictable kind of substitution (the " +
+            "scramble is always \"shift everything the same amount\") — this is the fully general " +
+            "version, where each letter's replacement is picked independently.",
+            "Worked example: key \"QWERTYUIOPASDFGHJKLZXCVBNM\" (26 letters, a scrambled alphabet — " +
+            "read it as \"a maps to whatever's in position 0 of this key, b maps to position 1," +
+            "\" and so on). Encrypt \"CAT\", letter by letter, by looking up each letter's POSITION " +
+            "(same A=0...Z=25 numbering as always) in that key string:\n\n" +
+            "Letter:              C         A         T\n" +
+            "Position:            2         0         19\n" +
+            "Key string index:    key[2]    key[0]    key[19]\n" +
+            "Key letter there:    E         Q         Z\n\n" +
+            "So \"CAT\" becomes \"EQZ\" — 'C' (position 2) became whatever sits at INDEX 2 of the key " +
+            "(\"E\"), 'A' (position 0, the very first slot) became index 0 of the key (\"Q\"), and " +
+            "'T' (position 19) became index 19 of the key (\"Z\"). Every letter of the message looks " +
+            "up its own position in that one 26-letter key string — that's the entire cipher.",
+            "Here's the number that should sound reassuring, and — unlike earlier lessons — let's " +
+            "actually build it instead of just stating it. The key is a scrambled alphabet, so " +
+            "picking one means deciding what 'A' maps to, then what 'B' maps to, and so on. 'A' can " +
+            "map to any of the 26 letters — 26 choices. Once that letter is used up, 'B' can map to " +
+            "any of the 25 REMAINING letters — 25 choices. 'C' then has 24 remaining choices, 'D' " +
+            "has 23, and so on down to the very last letter, 'Z,' which has only 1 letter left " +
+            "(whichever one nothing else took). Multiply every one of those choice-counts together — " +
+            "26 x 25 x 24 x ... x 2 x 1 — and that product has an abbreviation: 26! (\"26 factorial\"). " +
+            "It works out to roughly 400,000,000,000,000,000,000,000,000 possible keys. Trying every " +
+            "single one, even at a billion attempts per second, would take far longer than the " +
+            "universe has existed. Surely THIS is unbreakable?",
             "It isn't — and the next lesson is exactly why. Keyspace size only matters if the " +
             "ONLY way to attack a cipher is guessing the whole key at once."
         },
@@ -165,9 +212,10 @@ public static class TutorialContent
             Transform = (input, key) => key.Length == 26 ? ClassicalCiphers.SimpleSubstitution(input, key) : "Key must be exactly 26 letters.",
             Explain = (input, key) =>
                 "Each letter a-z was swapped for the letter in the matching position of your " +
-                "scrambled alphabet. With 26! possible keys, brute-forcing every arrangement is " +
-                "completely impractical — which is exactly why real attacks on this cipher never " +
-                "try to guess the key directly at all."
+                "scrambled alphabet — exactly the \"CAT\" -> \"EQZ\" lookup worked out above, just " +
+                "run across your whole message instead of 3 letters. With 26! possible keys, " +
+                "brute-forcing every arrangement is completely impractical — which is exactly why " +
+                "real attacks on this cipher never try to guess the key directly at all."
         }
     };
 
@@ -179,15 +227,33 @@ public static class TutorialContent
         Paragraphs = new[]
         {
             "In ordinary English text, the letter E shows up far more often than any other letter — " +
-            "about 1 in every 8 letters. T, A, O, I, N follow close behind (typesetters memorized " +
-            "this as \"ETAOIN SHRDLU\"). A simple substitution cipher swaps letters one-for-one, so " +
+            "roughly 12-13 out of every 100 letters (about 1 in 8). The next most common, " +
+            "approximately: T (9%), A (8%), O (7.5%), I (7%), N (6.7%) — typesetters memorized this " +
+            "order as \"ETAOIN SHRDLU.\" A simple substitution cipher swaps letters one-for-one, so " +
             "it can hide WHICH letter means \"E\" — but it can't hide the fact that SOME letter in " +
             "the ciphertext is going to show up roughly 1-in-8 times, because that letter is " +
-            "standing in for E on every single occurrence.",
-            "Count the letters in a long enough ciphertext, find the most common one, guess it's " +
-            "probably E, find the second-most common, guess T — and the 26!-sized keyspace " +
-            "becomes irrelevant. You never tried a single key. You read the shape of the language " +
-            "straight through the disguise.",
+            "standing in for E on every single occurrence, every single time.",
+            "Concretely: take \"THE TREE NEEDS WATER\" — a short sentence, chosen because it " +
+            "happens to use the letter E six times. Encrypt it with a Caesar shift of 3 (Lesson 2's " +
+            "cipher, picked only because it's the simplest possible substitution — the argument " +
+            "below works identically for the fully scrambled kind from Lesson 4):\n\n" +
+            "Plaintext:  THE TREE NEEDS WATER\n" +
+            "Ciphertext: WKH WUHH QHHGV ZDWHU\n\n" +
+            "Now just COUNT the letters in that ciphertext, ignoring what they actually decrypt to — " +
+            "pretend you don't know the key at all:\n\n" +
+            "H: 6   W: 3   U: 2   K: 1   Z: 1   Q: 1   G: 1   D: 1   V: 1\n\n" +
+            "'H' towers over every other letter, 6 occurrences against 3 or fewer for everything " +
+            "else — and 'H' is exactly the letter E became under this key (E is position 4, " +
+            "4+3=7='H', same formula as every Caesar example so far). You didn't need the key, or " +
+            "even a guess at the shift amount, to notice 'H' is almost certainly standing in for E — " +
+            "the SHAPE of the letter-count table gave it away before any decryption happened.",
+            "Scale that same counting trick up to a real paragraph of ciphertext, instead of one " +
+            "sentence, and the pattern gets even sharper and more reliable (short examples like the " +
+            "one above can have a lucky or unlucky letter or two; a few hundred letters of real " +
+            "English essentially never do). Count the letters in a long enough ciphertext, find the " +
+            "most common one, guess it's probably E, find the second-most common, guess T — and the " +
+            "26!-sized keyspace from Lesson 4 becomes irrelevant. You never tried a single key. You " +
+            "read the shape of the language straight through the disguise.",
             "This is the single most important lesson in this entire tutorial: a cipher's strength " +
             "isn't just \"how many keys are there\" — it's whether the output leaks information " +
             "about the input at all. Every lesson from here on is really about that same question, " +
@@ -517,11 +583,29 @@ public static class TutorialContent
             "sees both ciphertexts (never the key, never the plaintexts) can XOR the two " +
             "ciphertexts together. Watch what happens to the key:",
             "C1 ⊕ C2 = (P1 ⊕ K) ⊕ (P2 ⊕ K) = P1 ⊕ P2 ⊕ (K ⊕ K) = P1 ⊕ P2 — the key cancels out " +
-            "completely, XOR-ed with itself, leaving the XOR of the two original messages. That's " +
-            "not the plaintext yet, but it's no longer random-looking noise either — it's " +
-            "structured data an attacker can prise apart using the same letter-frequency thinking " +
-            "from Lesson 5, a technique called \"crib-dragging\" (guessing a likely word in one " +
-            "message and sliding it along to see what it reveals in the other).",
+            "completely, XOR-ed with itself, leaving the XOR of the two original messages. That " +
+            "algebra isn't just symbol-shuffling — it's Lesson 8's single-bit proof (XOR-ing a value " +
+            "with itself always gives 0, and XOR-ing anything with 0 leaves it unchanged) applied to " +
+            "a whole byte instead of one bit. Here it is with real numbers, one letter each, same " +
+            "hidden key byte 10011001 (0x99) reused for both — exactly the mistake, right here:\n\n" +
+            "  'A' (P1):        0 1 0 0 0 0 0 1\n" +
+            "  Key (K):         1 0 0 1 1 0 0 1\n" +
+            "  C1 = P1 XOR K:   1 1 0 1 1 0 0 0   (0xd8)\n" +
+            "\n" +
+            "  'B' (P2):        0 1 0 0 0 0 1 0\n" +
+            "  Key (K):         1 0 0 1 1 0 0 1\n" +
+            "  C2 = P2 XOR K:   1 1 0 1 1 0 1 1   (0xdb)\n" +
+            "\n" +
+            "  C1 XOR C2:       0 0 0 0 0 0 1 1   (0x03)\n" +
+            "  P1 XOR P2:       0 0 0 0 0 0 1 1   (0x03)   <- identical to C1 XOR C2, with no key involved\n" +
+            "\n" +
+            "The attacker computing \"C1 XOR C2\" never touched K at all, yet landed on the exact " +
+            "same byte as \"P1 XOR P2\" — because K appeared in both C1 and C2, and XOR-ing those two " +
+            "together cancels it out the same way any value XOR'd with itself does. That's not the " +
+            "plaintext yet, but it's no longer random-looking noise either — it's structured data an " +
+            "attacker can prise apart using the same letter-frequency thinking from Lesson 5, a " +
+            "technique called \"crib-dragging\" (guessing a likely word in one message and sliding it " +
+            "along to see what it reveals in the other).",
             "This single mistake — key reuse — is such a classic, catastrophic failure that it has " +
             "sunk real cryptographic systems historically (the Soviet VENONA project was partly " +
             "broken this exact way). It's also the conceptual ancestor of a very real, very modern " +
@@ -581,6 +665,36 @@ public static class TutorialContent
             "The answer is called a \"mode of operation,\" and getting it wrong is one of the most " +
             "common real-world encryption mistakes that exists — common enough that it gets its own " +
             "lesson next, and its own entries in the Lab."
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "A sample message",
+            DefaultInput = "Meet me at the usual place tonight",
+            Transform = (input, _) =>
+            {
+                var len = System.Text.Encoding.UTF8.GetByteCount(input);
+                var fullBlocks = len / 16;
+                var remainder = len % 16;
+                var blocksNeeded = (len + 15) / 16;
+                return $"Message length: {len} bytes\n" +
+                       $"{len} / 16 = {fullBlocks} full 16-byte block(s), remainder {remainder} byte(s)\n" +
+                       (remainder == 0
+                           ? $"Divides evenly — exactly {fullBlocks} block(s), nothing left over."
+                           : $"That leftover {remainder}-byte chunk is NOT a full block, but AES only " +
+                             $"knows how to scramble whole 16-byte blocks — so this message needs " +
+                             $"{blocksNeeded} blocks total, with the last one short by {16 - remainder} " +
+                             "byte(s) that have to come from somewhere (that \"somewhere\" is called " +
+                             "padding — covered in the next lesson).");
+            },
+            Explain = (input, _) =>
+                "This is exactly the question a block cipher forces on you for every single message: " +
+                "how many whole 16-byte blocks does this take, and what happens to whatever doesn't " +
+                "fit evenly? A stream cipher (like the repeating-key XOR from Lesson 8, or AES used " +
+                "in a stream-like mode) never asks this question at all — it just generates exactly " +
+                "as much keystream as the message needs, one byte at a time, so there's never a " +
+                "leftover chunk to deal with. That tradeoff — a block cipher's extra bookkeeping in " +
+                "exchange for different security properties — is exactly what the next lesson digs " +
+                "into."
         }
     };
 
@@ -785,11 +899,23 @@ public static class TutorialContent
         {
             InputLabel = "Text to hash",
             DefaultInput = "hunter2",
-            Transform = (input, _) => $"SHA-256: {ModernCrypto.Sha256Hex(input)}\nMD5:     {ModernCrypto.Md5Hex(input)}",
+            Transform = (input, _) =>
+            {
+                var repeated = string.Concat(Enumerable.Repeat(input.Length > 0 ? input : "x", 500));
+                var shortHash = ModernCrypto.Sha256Hex(input);
+                var longHash = ModernCrypto.Sha256Hex(repeated);
+                return $"SHA-256 of your {input.Length}-character input:              {shortHash}  ({shortHash.Length} hex chars = 32 bytes)\n" +
+                       $"SHA-256 of that SAME text repeated 500x ({repeated.Length,6} chars): {longHash}  ({longHash.Length} hex chars = 32 bytes)\n" +
+                       $"MD5 of your input (an older, shorter algorithm): {ModernCrypto.Md5Hex(input)}  ({ModernCrypto.Md5Hex(input).Length} hex chars = 16 bytes)";
+            },
             Explain = (input, _) =>
-                "Type the exact same text again and you'll get the exact same hash — every time, " +
-                "forever, no key involved. There's genuinely no operation that turns this hash back " +
-                "into \"hunter2\" — the only way to connect a hash back to a plaintext is to hash a " +
+                $"\"Fixed-size output, any input size\" isn't an abstract claim — look at the two SHA-" +
+                $"256 lines above: a {input.Length}-character input and a {Math.Max(input.Length, 1) * 500}-character " +
+                "input (500 times longer) both produced EXACTLY 64 hex characters. Feed it one " +
+                "letter, or an entire novel, and SHA-256 always hands back the same 32 bytes. Type " +
+                "the exact same text again and you'll get the exact same hash — every time, forever, " +
+                "no key involved. There's genuinely no operation that turns this hash back into your " +
+                "original text — the only way to connect a hash back to a plaintext is to hash a " +
                 "GUESS and see if it matches, which is exactly the next two lessons."
         }
     };
@@ -1137,12 +1263,41 @@ public static class TutorialContent
                        $"Bob computes:     {aPublic}^{bSecret} mod {p} = {bShared}\n" +
                        $"Shared secret matches: {(aShared == bShared ? "YES" : "no — check your inputs")}";
             },
-            Explain = (_, _) =>
-                "An eavesdropper watching p, g, and both PUBLIC values still can't easily recover " +
-                "either secret number or the shared result — at real-world sizes (hundreds of " +
-                "digits), reversing the modular exponentiation is believed to be computationally " +
-                "infeasible. This exact idea, scaled up, is what lets your browser and a web server " +
-                "agree on a session key before they've ever communicated before."
+            Explain = (aSecretStr, bSecretStr) =>
+            {
+                if (!int.TryParse(aSecretStr, out var aSecret)) return "Enter a whole number for Alice's secret.";
+                const int p = 23, g = 5;
+                var aPublic = ModPow(g, aSecret, p);
+
+                var tries = 0;
+                var recoveredSecret = -1;
+                for (var guess = 1; guess < p; guess++)
+                {
+                    tries++;
+                    if (ModPow(g, guess, p) == aPublic) { recoveredSecret = guess; break; }
+                }
+
+                var matchNote = recoveredSecret == aSecret
+                    ? $"exactly Alice's real secret"
+                    : "a DIFFERENT secret that happens to produce the identical public value — p=23 " +
+                      "is so small that more than one secret can collide this way, which essentially " +
+                      "never happens at real-world sizes";
+
+                return "An eavesdropper watching p, g, and Alice's PUBLIC value doesn't have to " +
+                       "out-think the math — at THIS tiny scale they can just try every possible " +
+                       "secret number and check which one reproduces Alice's public value, exactly " +
+                       "like trying every Caesar shift back in Lesson 2:\n\n" +
+                       $"  Alice's public value: {aPublic}\n" +
+                       $"  Brute-force search: try secret=1,2,3,...  compute g^secret mod {p}  stop when it equals {aPublic}\n" +
+                       $"  Found it at secret={recoveredSecret}, after just {tries} guess(es) — {matchNote}.\n\n" +
+                       $"That search succeeded almost instantly ONLY because p={p} is absurdly small. " +
+                       "Real systems use primes hundreds of digits long, where this exact same " +
+                       "brute-force search would need vastly more attempts than there are atoms in " +
+                       "the observable universe — reversing the modular exponentiation is believed to " +
+                       "be computationally infeasible at that scale, which is the entire reason " +
+                       "Diffie-Hellman, scaled up, is what lets your browser and a web server agree " +
+                       "on a session key before they've ever communicated before.";
+            }
         }
     };
 
