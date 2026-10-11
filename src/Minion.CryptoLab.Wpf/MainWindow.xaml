@@ -1,0 +1,64 @@
+<Window x:Class="Minion.CryptoLab.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Minion.CryptoLab.Wpf"
+        mc:Ignorable="d"
+        Style="{StaticResource BaseWindowStyle}"
+        Title="Minion.CryptoLab" Height="760" Width="1100" MinHeight="560" MinWidth="820"
+        WindowStartupLocation="CenterScreen" WindowStyle="SingleBorderWindow" ResizeMode="CanResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================= MENU BAR ================= -->
+        <Menu Grid.Row="0" Background="{DynamicResource Brush.Bg1}" Foreground="{DynamicResource Brush.TextPrimary}"
+              BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1">
+            <MenuItem Header="_File">
+                <MenuItem Header="E_xit" Click="ExitMenuItem_Click"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Toggle theme" Click="ToggleThemeMenuItem_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="Show tutorial" Click="TutorialButton_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- ================= WELCOME ================= -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="680" Margin="0,40,0,40">
+                <TextBlock Text="🔐" FontSize="64" HorizontalAlignment="Center"/>
+                <TextBlock Text="Minion.CryptoLab" Style="{StaticResource Text.H1}" FontSize="32"
+                           HorizontalAlignment="Center" Margin="0,16,0,6"/>
+                <TextBlock Text="From the decoder-ring basics to key exchange — see exactly how (and why) every step works."
+                           Style="{StaticResource Text.Muted}" FontSize="14" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+
+                <Border Style="{StaticResource Card}" Margin="0,26,0,0">
+                    <StackPanel>
+                        <TextBlock Text="🛡 Everything here really runs" Style="{StaticResource Text.H2}" FontSize="14"/>
+                        <TextBlock Style="{StaticResource Text.Body}" Margin="0,6,0,0" TextWrapping="Wrap">
+                            Unlike attacking a real system, encrypting or hashing your own practice text is
+                            completely harmless — so every demo in this tutorial runs real, working
+                            cryptography (via .NET's own System.Security.Cryptography) on whatever you type,
+                            live. Nothing is simulated.
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Button Content="🎓  Start the tutorial" Style="{StaticResource Button.Primary}" Padding="22,11"
+                        FontSize="14" HorizontalAlignment="Center" Margin="0,24,0,0" Click="TutorialButton_Click"/>
+
+                <Border Style="{StaticResource Card}" Margin="0,30,0,0" Background="{DynamicResource Brush.AccentMuted}">
+                    <TextBlock Style="{StaticResource Text.Body}" TextWrapping="Wrap" FontSize="12">
+                        <Run Text="🚧 Coming next: " FontWeight="Bold"/>
+                        <Run Text="a catalog of real-world cryptographic mistakes (hardcoded keys, reused nonces, ECB in production, unsalted fast-hashed passwords, predictable tokens...) graded Partial-vs-Best just like Minion.InjectionLab, plus a quiz mode. This first release is the full conceptual tutorial — twenty steps, decoder-ring basics through key exchange."/>
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

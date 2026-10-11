@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Minion.CryptoLab.Wpf/Minion.CryptoLab.Wpf.csproj" />
+  </Folder>
+</Solution>

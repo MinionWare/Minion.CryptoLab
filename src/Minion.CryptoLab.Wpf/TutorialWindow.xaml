@@ -1,0 +1,161 @@
+<Window x:Class="Minion.CryptoLab.Wpf.TutorialWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        mc:Ignorable="d"
+        Style="{StaticResource BaseWindowStyle}"
+        Title="Learning Cryptography" Height="860" Width="900" MinHeight="620" MinWidth="700"
+        WindowStartupLocation="CenterOwner" WindowStyle="SingleBorderWindow" ResizeMode="CanResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================= HEADER ================= -->
+        <StackPanel Grid.Row="0" Margin="32,24,32,10">
+            <TextBlock Text="Learning Cryptography — from decoder rings to key exchange" Style="{StaticResource Text.H1}" FontSize="18"/>
+            <TextBlock Style="{StaticResource Text.Muted}" Margin="0,4,0,0">
+                <Run Text="Step "/><Run Text="{Binding StepNumber, Mode=OneWay}"/><Run Text=" of "/><Run Text="{Binding StepCount, Mode=OneWay}"/>
+            </TextBlock>
+        </StackPanel>
+
+        <!-- ================= CONTENT ================= -->
+        <ScrollViewer Grid.Row="1" Margin="32,0,32,0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="{Binding CurrentStep.Title, Mode=OneWay}" Style="{StaticResource Text.H2}" FontSize="19" Margin="0,0,0,12"/>
+
+                <ItemsControl ItemsSource="{Binding CurrentStep.Paragraphs, Mode=OneWay}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Mode=OneTime}" Style="{StaticResource Text.Body}" Margin="0,0,0,12"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- ============ Cipher text-demo ============ -->
+                <Border Style="{StaticResource Card}" Margin="0,4,0,24"
+                        Visibility="{Binding HasDemo, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="🧪 Try it yourself" Style="{StaticResource Text.H2}"/>
+                        <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Style="{StaticResource Text.Muted}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBox.Field}" FontFamily="{StaticResource Font.Code}"/>
+
+                        <StackPanel Visibility="{Binding HasDemoKey, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock Text="{Binding DemoKeyLabel, Mode=OneWay}" Style="{StaticResource Text.Muted}" Margin="0,10,0,4"/>
+                            <TextBox Text="{Binding DemoKey, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBox.Field}" FontFamily="{StaticResource Font.Code}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Result" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="0,14,0,4"/>
+                        <Border Style="{StaticResource CodeBlock}">
+                            <TextBox Text="{Binding DemoOutput, Mode=OneWay}" Style="{StaticResource TextBox.Selectable}"
+                                     FontFamily="{StaticResource Font.Code}" FontSize="13" TextWrapping="Wrap"
+                                     Foreground="{DynamicResource Brush.CodeText}" AcceptsReturn="True"/>
+                        </Border>
+
+                        <TextBlock Text="{Binding DemoExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Frequency chart demo ============ -->
+                <Border Style="{StaticResource Card}" Margin="0,4,0,24"
+                        Visibility="{Binding HasFrequency, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="🧪 Try it yourself" Style="{StaticResource Text.H2}"/>
+                        <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Style="{StaticResource Text.Muted}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBox.Field}"
+                                 FontFamily="{StaticResource Font.Code}" AcceptsReturn="True" Height="48" TextWrapping="Wrap"/>
+
+                        <TextBlock Text="Letter frequency" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="0,14,0,8"/>
+                        <ItemsControl ItemsSource="{Binding FrequencyBars}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,1,0,1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="20"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="30"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{Binding Letter}" FontFamily="{StaticResource Font.Code}" FontSize="11" VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="10" HorizontalAlignment="Left" CornerRadius="2"
+                                                Background="{DynamicResource Brush.Accent}"
+                                                Width="{Binding Fraction, Converter={StaticResource FractionToWidthConverter}}"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Count}" FontSize="11" Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="{Binding FrequencyExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============ Block-pattern (ECB vs CBC) demo ============ -->
+                <Border Style="{StaticResource Card}" Margin="0,4,0,24"
+                        Visibility="{Binding HasBlockPattern, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="🧪 Try it yourself" Style="{StaticResource Text.H2}"/>
+                        <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Style="{StaticResource Text.Muted}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBox.Field}" FontFamily="{StaticResource Font.Code}"/>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="ECB — each block independent" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <ItemsControl ItemsSource="{Binding EcbBlocks}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource CodeBlock}" Margin="0,0,0,4" Padding="8,5">
+                                                <TextBlock Text="{Binding}" FontFamily="{StaticResource Font.Code}" FontSize="11" Foreground="{DynamicResource Brush.CodeText}" TextWrapping="Wrap"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="CBC — chained to the block before it" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <ItemsControl ItemsSource="{Binding CbcBlocks}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource CodeBlock}" Margin="0,0,0,4" Padding="8,5">
+                                                <TextBlock Text="{Binding}" FontFamily="{StaticResource Font.Code}" FontSize="11" Foreground="{DynamicResource Brush.CodeText}" TextWrapping="Wrap"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="{Binding BlockPatternExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ================= FOOTER ================= -->
+        <Grid Grid.Row="2" Margin="32,10,32,22">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="Skip tutorial" Style="{StaticResource Button.Ghost}" Command="{Binding CloseCommand}"/>
+
+            <Button Grid.Column="2" Content="← Back" Style="{StaticResource Button.Ghost}" Margin="0,0,10,0"
+                    Command="{Binding BackCommand}" IsEnabled="{Binding CanGoBack}"/>
+            <Button Grid.Column="3" Content="{Binding NextButtonLabel, Mode=OneWay}" Style="{StaticResource Button.Primary}"
+                    Padding="18,8" Command="{Binding NextCommand}"/>
+        </Grid>
+    </Grid>
+</Window>
