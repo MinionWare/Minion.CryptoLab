@@ -5,9 +5,32 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         mc:Ignorable="d"
         Style="{StaticResource BaseWindowStyle}"
-        Title="Learning Cryptography" Height="860" Width="900" MinHeight="620" MinWidth="700"
+        Title="Learning Cryptography" Height="860" Width="1140" MinHeight="620" MinWidth="820"
         WindowStartupLocation="CenterOwner" WindowStyle="SingleBorderWindow" ResizeMode="CanResize">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= LEFT NAV ================= -->
+        <Border Grid.Column="0" Background="{DynamicResource Brush.Bg1}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Lessons" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="16,20,16,8"/>
+                <ListBox DockPanel.Dock="Top" ItemsSource="{Binding StepTitles}" SelectedIndex="{Binding StepIndex, Mode=TwoWay}"
+                         Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ItemContainerStyle="{StaticResource AttackListItem}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- ================= MAIN ================= -->
+        <Grid Grid.Column="1">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -157,6 +180,7 @@
                     Command="{Binding BackCommand}" IsEnabled="{Binding CanGoBack}"/>
             <Button Grid.Column="3" Content="{Binding NextButtonLabel, Mode=OneWay}" Style="{StaticResource Button.Primary}"
                     Padding="18,8" Command="{Binding NextCommand}"/>
+        </Grid>
         </Grid>
     </Grid>
 </Window>

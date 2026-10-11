@@ -17,8 +17,13 @@ public partial class TutorialViewModel : ObservableObject
 
     public TutorialViewModel()
     {
+        StepTitles = _steps.Select((s, i) => $"{i + 1}. {s.Title}").ToList();
         LoadStepState();
     }
+
+    /// <summary>Numbered lesson titles for the left-nav list — click any one to jump straight to
+    /// it, independent of the linear Back/Next flow.</summary>
+    public IReadOnlyList<string> StepTitles { get; }
 
     [ObservableProperty]
     private int stepIndex;
