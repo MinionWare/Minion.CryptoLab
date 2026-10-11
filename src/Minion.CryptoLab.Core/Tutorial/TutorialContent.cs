@@ -70,7 +70,22 @@ public static class TutorialContent
             "To decrypt, the receiver shifts backward by the same amount. Try changing the shift " +
             "amount below and watch the same message turn into completely different-looking text — " +
             "but the SAME shift always produces the SAME output, every time. That predictability is " +
-            "the whole mechanism, and (spoiler) also exactly why it's breakable."
+            "the whole mechanism, and (spoiler) also exactly why it's breakable.",
+            "One convention worth settling right now, since every cipher in this tutorial depends on " +
+            "it: letters are numbered starting from ZERO — A=0, B=1, C=2, ... Z=25 — not A=1...Z=26. " +
+            "This isn't arbitrary. Wrapping around the alphabet is a \"modulo 26\" operation (26 " +
+            "letters, so one past Z wraps back to A), and that arithmetic is clean ONLY if your " +
+            "values run 0 through 25. Shift 'Z' (25) by 3: (25+3) mod 26 = 28 mod 26 = 2, which is " +
+            "'C' — correct, one line of math, no special cases.",
+            "Now try the same wraparound with A=1...Z=26 instead. Shift 'Y' (25 in this scheme) by " +
+            "1 — it should obviously give 'Z'. The same formula gives (25+1) mod 26 = 26 mod 26 = 0. " +
+            "But there IS no letter 0 in a 1-26 scheme — the alphabet starts at 1. The math silently " +
+            "produces a value that doesn't correspond to anything, right at the exact moment the " +
+            "wraparound happens, and you'd need to bolt on a special case (\"if the result is 0, it " +
+            "actually means 26/Z\") to every single shift calculation, forever, just to patch over " +
+            "it. Zero-indexing doesn't have that gap at all — every possible result of a mod-26 " +
+            "operation (0 through 25) is automatically a real letter, with nothing left over to " +
+            "patch. It's a small choice that quietly removes an entire category of off-by-one bugs."
         },
         Demo = new CipherDemo
         {
