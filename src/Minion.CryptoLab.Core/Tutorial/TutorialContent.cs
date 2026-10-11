@@ -26,13 +26,18 @@ public static class TutorialContent
         Step10BlockVsStream(),
         Step11EcbVsCbc(),
         Step12AuthenticatedEncryption(),
+        Step12bChaCha20Poly1305(),
         Step13HashingVsEncryption(),
+        Step13bBrokenHashes(),
         Step14Salting(),
+        Step14bPepper(),
         Step15SlowKdf(),
         Step16Hmac(),
         Step17PaddingOracle(),
         Step18KeyExchange(),
         Step18bPublicPrivateKeys(),
+        Step18cDigitalSignatures(),
+        Step18dCertificatesAndPki(),
         Step19Randomness(),
         Step20WrapUp()
     };
@@ -877,6 +882,67 @@ public static class TutorialContent
         }
     };
 
+    // ---------------------------------------------------------------- 12b. ChaCha20-Poly1305
+
+    private static readonly byte[] ChaChaDemoKey = ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key-chacha");
+    private static readonly byte[] ChaChaDemoNonce = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+
+    private static TutorialStep Step12bChaCha20Poly1305() => new()
+    {
+        Title = "The other modern cipher: ChaCha20-Poly1305",
+        Paragraphs = new[]
+        {
+            "AES-GCM (last lesson) is extremely fast on hardware with built-in AES acceleration — " +
+            "which is most modern PCs and servers. But not every device has that: older phones, " +
+            "cheap IoT chips, and some embedded hardware don't, and AES runs noticeably slower there " +
+            "in plain software. ChaCha20 is a different stream cipher, built entirely out of basic " +
+            "operations (add, rotate, XOR) that run fast on ANY processor with no special hardware " +
+            "needed — which is exactly why it's the default cipher for a lot of mobile HTTPS " +
+            "traffic today.",
+            "Poly1305 is the authentication half, paired with ChaCha20 the same way GCM pairs AES " +
+            "with its own authentication tag. Together, \"ChaCha20-Poly1305\" is a complete AEAD " +
+            "(authenticated encryption) — the same CATEGORY of tool as AES-GCM, solving the exact " +
+            "same two problems (confidentiality + tamper detection) at once, just built from " +
+            "different internal machinery.",
+            "And because it's fundamentally the same idea as GCM underneath — a keystream generated " +
+            "from the key and nonce, XOR-ed with the plaintext — it inherits the EXACT same rule, " +
+            "for the exact same reason: never reuse a nonce with the same key. Here's that rule " +
+            "breaking live, with real ChaCha20-Poly1305 instead of AES-GCM, same two messages, same " +
+            "reused-nonce mistake:"
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "Message 1",
+            KeyLabel = "Message 2 (both \"encrypted\" with the SAME hidden ChaCha20-Poly1305 key AND the same reused nonce)",
+            DefaultInput = "TRANSFER 100 TO BOB ACCOUNT NOW",
+            DefaultKey = "MEETING MOVED TO THREE PM TODAY",
+            Transform = (p1, p2) =>
+            {
+                var b1 = System.Text.Encoding.UTF8.GetBytes(p1);
+                var b2 = System.Text.Encoding.UTF8.GetBytes(p2);
+                var c1 = ModernCrypto.ChaCha20Poly1305Encrypt(b1, ChaChaDemoKey, ChaChaDemoNonce, out _);
+                var c2 = ModernCrypto.ChaCha20Poly1305Encrypt(b2, ChaChaDemoKey, ChaChaDemoNonce, out _);
+                var len = Math.Min(c1.Length, c2.Length);
+                var xorOfCiphertexts = ClassicalCiphers.Xor(c1[..len], c2[..len]);
+                var xorOfPlaintexts = ClassicalCiphers.Xor(b1[..len], b2[..len]);
+                var cHex = Convert.ToHexString(xorOfCiphertexts).ToLowerInvariant();
+                var pHex = Convert.ToHexString(xorOfPlaintexts).ToLowerInvariant();
+                return $"C1 (hex):              {Convert.ToHexString(c1).ToLowerInvariant()}\n" +
+                       $"C2 (hex):              {Convert.ToHexString(c2).ToLowerInvariant()}\n" +
+                       $"C1 XOR C2:             {cHex}\n" +
+                       $"P1 XOR P2 (for proof): {pHex}\n" +
+                       $"Identical? {(cHex == pHex ? "YES — the exact same key-reuse failure as Lessons 9 and 12, just with ChaCha20-Poly1305 this time" : "no")}";
+            },
+            Explain = (_, _) =>
+                "Different cipher, different internal math, same catastrophic failure the instant a " +
+                "nonce gets reused — because the failure was never about AES or ChaCha20 " +
+                "specifically, it's about what happens to ANY keystream-based cipher the moment the " +
+                "same keystream gets used twice. Pick GCM or ChaCha20-Poly1305 based on your " +
+                "hardware and ecosystem; the \"never reuse a nonce\" rule isn't optional with either " +
+                "one."
+        }
+    };
+
     // ---------------------------------------------------------------- 13. Hashing vs encryption
 
     private static TutorialStep Step13HashingVsEncryption() => new()
@@ -921,6 +987,91 @@ public static class TutorialContent
         }
     };
 
+    // ---------------------------------------------------------------- 13b. Broken hashes
+
+    private static TutorialStep Step13bBrokenHashes() => new()
+    {
+        Title = "When \"a hash\" isn't enough: MD5 and SHA-1 are broken",
+        Paragraphs = new[]
+        {
+            "You'll still see MD5 and SHA-1 everywhere in older code, and both are called " +
+            "\"broken\" — but broken does NOT mean someone figured out how to reverse them back to " +
+            "the original input; that's still just as impossible as ever for any hash. Broken means " +
+            "something more specific: an attacker can find TWO DIFFERENT inputs that produce the " +
+            "EXACT SAME hash (a \"collision\") far faster than they should be able to. That sounds " +
+            "abstract until you hit a case where it matters — a hash used to prove \"this is really " +
+            "the exact file I approved\" stops proving anything if an attacker can craft a second, " +
+            "malicious file sharing that same hash.",
+            "Both breaks are real, documented, and happened years apart: MD5 collisions were first " +
+            "demonstrated in 2004 (Wang, Feng, Lai, and Yu). SHA-1 collisions were demonstrated for " +
+            "real in 2017, by Google and CWI Amsterdam (\"SHAttered\") — two genuinely different PDF " +
+            "files that hash to the identical SHA-1 value. Neither algorithm got slower or changed " +
+            "its output size; the guarantee that broke was \"you can't find two inputs that collide " +
+            "faster than brute force.\"",
+            "Here's the real mathematical reason collisions become findable AT ALL, demonstrated " +
+            "live rather than just asserted: it's called the \"birthday paradox\" (the same math " +
+            "behind \"in a room of just 23 people, there's better than even odds two share a " +
+            "birthday\" — far fewer people than the 366 you'd intuitively guess). Finding ANY two " +
+            "inputs that collide needs only roughly the SQUARE ROOT of the total number of possible " +
+            "hash values, not half of them. A real full-size hash's output space is so enormous that " +
+            "even a square root is still astronomically large — but the demo below shrinks the " +
+            "hash down to just a few bits, small enough to brute-force for real, right now, so you " +
+            "can watch the exact math play out instead of taking it on faith.",
+            "This is also exactly why hash SIZE matters so much for collision resistance " +
+            "specifically: MD5's 128-bit output only gives roughly 2^64 worth of real collision " +
+            "resistance (the square root of 2^128) — large in 2004, not large enough against " +
+            "today's hardware combined with the clever mathematical shortcuts Wang's team found. " +
+            "SHA-256's 256-bit output gives roughly 2^128 worth of collision resistance instead — " +
+            "comfortably out of reach of anything on the horizon, which is exactly why it replaced " +
+            "both broken algorithms."
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "Truncate SHA-256's output to this many bits before searching for a collision (try 8-20)",
+            DefaultInput = "16",
+            Transform = (input, _) =>
+            {
+                if (!int.TryParse(input, out var bits) || bits < 4 || bits > 22)
+                    return "Enter a whole number from 4 to 22 (higher takes longer to search).";
+
+                var byteCount = (bits + 7) / 8;
+                var mask = bits % 8 == 0 ? 0xFF : (0xFF << (8 - bits % 8)) & 0xFF;
+                var seen = new Dictionary<string, string>();
+                var maxTries = Math.Min(4_000_000, 1 << (bits + 4));
+                var rng = new Random(12345);
+
+                for (var i = 0; i < maxTries; i++)
+                {
+                    var candidate = $"msg-{i}-{rng.Next()}";
+                    var fullHash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(candidate));
+                    var truncated = (byte[])fullHash[..byteCount].Clone();
+                    truncated[^1] = (byte)(truncated[^1] & mask);
+                    var key = Convert.ToHexString(truncated);
+
+                    if (seen.TryGetValue(key, out var earlier))
+                    {
+                        var expected = Math.Sqrt(Math.Pow(2, bits));
+                        return $"Collision found after {i + 1} tries:\n" +
+                               $"  \"{earlier}\"\n" +
+                               $"  \"{candidate}\"\n" +
+                               $"both hash to {key} once truncated to {bits} bits.\n\n" +
+                               $"sqrt(2^{bits}) = {expected:N0}  <- the rough order of magnitude this should take, and it did.";
+                    }
+                    seen[key] = candidate;
+                }
+                return $"No collision found in {maxTries:N0} tries — try a smaller bit count (the search is capped so this demo doesn't hang).";
+            },
+            Explain = (input, _) =>
+                "Every single hash above was a REAL, fully computed SHA-256 hash — just truncated " +
+                "down to a tiny number of bits so a collision is findable in a fraction of a second " +
+                "instead of requiring a planet's worth of computers. The number of tries it actually " +
+                "took should land close to the square root of 2^bits, not anywhere near 2^bits " +
+                "itself — that gap between \"square root\" and \"the whole space\" is the entire " +
+                "reason hash size has to be roughly DOUBLE what you'd naively expect you need, for " +
+                "any hash meant to resist collisions."
+        }
+    };
+
     // ---------------------------------------------------------------- 14. Salting
 
     private static TutorialStep Step14Salting() => new()
@@ -961,6 +1112,62 @@ public static class TutorialContent
                 "hashes differ completely despite the IDENTICAL password, because each user's salt " +
                 "is different. Re-run this and User A/B's salts (and hashes) change again — only " +
                 "the unsalted line ever stays the same."
+        }
+    };
+
+    // ---------------------------------------------------------------- 14b. Pepper
+
+    private static TutorialStep Step14bPepper() => new()
+    {
+        Title = "A second secret, kept somewhere else entirely: pepper",
+        Paragraphs = new[]
+        {
+            "Salt stops an attacker from attacking ALL your users at once with one precomputed " +
+            "table — but it does nothing to slow down attacking ONE individual password. If an " +
+            "attacker steals your whole database (hash AND salt sit right next to each other, by " +
+            "design — salt was never secret), they can still brute-force any single salted hash at " +
+            "full speed, same as before. Salt defeats batch attacks; it was never meant to defeat an " +
+            "attacker focused on one target.",
+            "A pepper is a second secret value, but it works completely differently from salt in two " +
+            "specific ways: it's the SAME for every single user (one value for the whole app, not " +
+            "one per password), and it is NEVER stored anywhere near the database — it lives " +
+            "somewhere else entirely: an environment variable, a config file outside the web root, a " +
+            "dedicated secrets manager. The hash becomes hash(pepper + salt + password). An attacker " +
+            "who steals ONLY the database — the single most common real-world breach, via a backup " +
+            "leak or a SQL injection dump — is now missing a piece of the puzzle that was never in " +
+            "what they stole, no matter how good their password guess is.",
+            "One honest limit, worth stating plainly: pepper only helps when the database leak and " +
+            "the pepper's storage are genuinely separate failures. If an attacker gets full control " +
+            "of the server itself (not just a DB dump), they can likely read wherever the pepper " +
+            "lives too, since the running application has to read it in order to check logins at " +
+            "all. Pepper raises the bar specifically against \"the database leaked, but nothing " +
+            "else did\" — a very common real scenario, just not every scenario."
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "Password",
+            DefaultInput = "hunter2",
+            Transform = (input, _) =>
+            {
+                const string realPepper = "app-wide-secret-2024"; // never stored in the DB — lives in config/secrets manager only
+                var salt = Convert.ToHexString(ModernCrypto.RandomSalt(4)).ToLowerInvariant();
+                var realHash = ModernCrypto.Sha256Hex(salt + realPepper + input);
+                var stolenDbGuessNoPepper = ModernCrypto.Sha256Hex(salt + input);
+                var stolenDbGuessWrongPepper = ModernCrypto.Sha256Hex(salt + "attackers-wrong-guess" + input);
+
+                return $"Real stored hash (uses salt + pepper + password):  {realHash}\n\n" +
+                       $"Attacker steals ONLY the database (salt + hash). They guess your EXACT real " +
+                       $"password \"{input}\" correctly, but don't know a pepper exists:\n" +
+                       $"  guess without any pepper:      {stolenDbGuessNoPepper}   <- {(stolenDbGuessNoPepper == realHash ? "matches (no pepper in use)" : "does NOT match")}\n" +
+                       $"Attacker learns pepper exists but has to guess its value too:\n" +
+                       $"  guess with the WRONG pepper:   {stolenDbGuessWrongPepper}   <- {(stolenDbGuessWrongPepper == realHash ? "matches" : "does NOT match")}";
+            },
+            Explain = (input, _) =>
+                "Notice the attacker had your EXACT real password both times and still couldn't " +
+                "produce a matching hash — because the database leak never contained the pepper, " +
+                "and a correct password guess alone isn't enough anymore. Salt (Lesson 14) stopped " +
+                "attacking every user at once with one table; pepper stops a stolen database from " +
+                "being enough on its own, even one password at a time."
         }
     };
 
@@ -1471,6 +1678,172 @@ public static class TutorialContent
                 "mathematically special, but because in binary it's 10000000000000001 (only two " +
                 "1-bits), which makes the repeated-squaring math this tutorial has used since the " +
                 "Diffie-Hellman lesson run faster."
+        }
+    };
+
+    // ---------------------------------------------------------------- 18c. Digital signatures
+
+    private static TutorialStep Step18cDigitalSignatures() => new()
+    {
+        Title = "Running the padlock backward: digital signatures",
+        Paragraphs = new[]
+        {
+            "Last lesson's padlock locks with the public key and unlocks with the private key — " +
+            "that's ENCRYPTION, built to keep something secret. Signing solves a different problem " +
+            "entirely (proving a message really came from you, untampered) and runs the exact same " +
+            "two keys in the OPPOSITE direction. Here's the scene, play it out fully before any math.",
+            "You have a signet ring — a metal stamp, cut with a pattern unique to you. Only you have " +
+            "this ring; it never leaves your hand. You write a document, melt a blob of wax onto it, " +
+            "and press your ring into the wax. Anyone who has ever seen an IMPRESSION of your ring " +
+            "before (not the ring itself — just what its stamp looks like, which you've shown " +
+            "around freely) can look at this new wax seal and confirm: yes, that pattern matches, " +
+            "this really was stamped by that specific ring. What they CANNOT do is press a new, " +
+            "valid seal themselves — knowing what your stamp's pattern looks like doesn't let you " +
+            "reproduce the ring that makes it.",
+            "Mapping that to the digital version: your PRIVATE key presses the seal (signs) — the " +
+            "one thing only you can do, since only you hold it. Your PUBLIC key checks a seal " +
+            "against the known pattern (verifies) — anyone can do this, freely, forever, without " +
+            "ever being able to forge a new one. Notice this is the REVERSE of encryption's roles: " +
+            "there, the public key locked and only the private key could undo it; here, the private " +
+            "key signs and the public key merely checks.",
+            "One more piece before the math: you don't press your seal onto the entire document " +
+            "directly — a real RSA signature operation is slow enough that signing a huge file " +
+            "letter-by-letter would be impractical. Instead, you hash the document first (Lesson " +
+            "13's fixed-size fingerprint, the same SHA-256 used throughout this tutorial) and sign " +
+            "THAT. Verifying means the other person re-hashes the document themselves and checks " +
+            "your signature against that fresh hash — so if even one bit of the document changed " +
+            "after signing, the hash changes completely (the avalanche effect from Lesson 16's HMAC " +
+            "demo applies here too, same property, different algorithm), and the old signature no " +
+            "longer matches anything.",
+            "The real math is RSA again, just run with the exponents in the opposite order from " +
+            "encryption. Reusing the exact same toy key pair from last lesson (n=55, e=7, d=23) and " +
+            "pretending a document hashes down to the small number 9:\n\n" +
+            "  Sign (private key first):   9^23 mod 55 = 14   <- the \"signature\"\n" +
+            "  Verify (public key second):  14^7 mod 55 = 9    <- matches the original hash, signature is valid\n\n" +
+            "And the tamper check: if the document had been altered so its hash came out as 10 " +
+            "instead of 9, the verifier would compare 9 (what the old signature actually proves) " +
+            "against 10 (what the document NOW hashes to) — they don't match, so verification fails, " +
+            "exactly as it should. One more pair, so it repeats: hash=3 signs to 3^23 mod 55 = 27, " +
+            "and verifies back with 27^7 mod 55 = 3.",
+            "The live demo below signs and verifies real text with a real 2048-bit RSA key pair, " +
+            "using .NET's actual signing APIs — and then deliberately tampers with one character to " +
+            "show verification fail for real, not narrated."
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "A message to sign",
+            DefaultInput = "I, the real author, approve this release.",
+            Transform = (input, _) =>
+            {
+                var rsa = RealRsaDemoKey.Value;
+                var data = System.Text.Encoding.UTF8.GetBytes(input);
+                var signature = rsa.SignData(data, System.Security.Cryptography.HashAlgorithmName.SHA256, System.Security.Cryptography.RSASignaturePadding.Pss);
+                var signatureBase64 = Convert.ToBase64String(signature);
+
+                var originalValid = rsa.VerifyData(data, signature, System.Security.Cryptography.HashAlgorithmName.SHA256, System.Security.Cryptography.RSASignaturePadding.Pss);
+
+                var tampered = input.Length > 0
+                    ? input[..^1] + (char)(input[^1] + 1)
+                    : input;
+                var tamperedData = System.Text.Encoding.UTF8.GetBytes(tampered);
+                var tamperedValid = rsa.VerifyData(tamperedData, signature, System.Security.Cryptography.HashAlgorithmName.SHA256, System.Security.Cryptography.RSASignaturePadding.Pss);
+
+                return $"Signature (base64, truncated): {signatureBase64[..Math.Min(60, signatureBase64.Length)]}... ({signature.Length} bytes)\n\n" +
+                       $"Verify against the ORIGINAL message: {(originalValid ? "VALID" : "invalid")}\n" +
+                       $"Verify that SAME signature against a one-character-tampered message\n" +
+                       $"  (\"{tampered}\"): {(tamperedValid ? "valid" : "INVALID — tampering detected")}";
+            },
+            Explain = (_, _) =>
+                "Same signature bytes, checked against two messages that differ by exactly one " +
+                "character — valid against the real one, flatly rejected against the tampered one. " +
+                "That's the hash's avalanche effect doing the real work: changing one character " +
+                "changes the hash completely, and the signature only ever matches one specific " +
+                "hash. Run this again and the signature bytes themselves come out different each " +
+                "time too (RSASSA-PSS, the modern signature padding, mixes in random salt the same " +
+                "way OAEP did for encryption last lesson) — yet verification still succeeds every " +
+                "time against the untampered message, because validity never depended on the " +
+                "signature being identical run to run, only on it matching that one hash."
+        }
+    };
+
+    // ---------------------------------------------------------------- 18d. Certificates and PKI
+
+    private static TutorialStep Step18dCertificatesAndPki() => new()
+    {
+        Title = "A notarized ID card for a public key: certificates",
+        Paragraphs = new[]
+        {
+            "You now have everything a certificate actually is built from. A certificate is a " +
+            "bundle of plain fields — who it belongs to (Subject), who is vouching for it (Issuer), " +
+            "the subject's PUBLIC key, a validity date range, a few other identifiers — plus a " +
+            "SIGNATURE over the hash of that whole bundle, made with the ISSUER's private key. " +
+            "\"Signing a certificate\" is not a different operation from last lesson — it's the " +
+            "identical hash-then-sign process, just applied to a structured set of fields instead " +
+            "of a plain sentence.",
+            "Verifying one works exactly like verifying any signature: recompute the hash of the " +
+            "cert's fields yourself, check the signature against it using the ISSUER's public key. " +
+            "If it checks out, you now trust this stranger's public key — not because you ever met " +
+            "them, but purely because a party you ALREADY trusted vouched for it. That's the entire " +
+            "trick. No magic, same math as the wax seal.",
+            "Chain of trust: that issuer's own certificate was ALSO signed by someone (or, for a " +
+            "\"root\" CA, by itself). Walk up the chain of \"who signed whose certificate\" and you " +
+            "eventually reach one of a small number of ROOT certificates that are pre-installed in " +
+            "your operating system or browser, trusted by fiat — someone decided to trust them, " +
+            "continuously audits them, and ships their public keys with every copy of Windows, " +
+            "macOS, Chrome, and so on.",
+            "What actually makes a CA an authority — concretely, since \"they just are\" isn't a real " +
+            "answer: there are different VALIDATION LEVELS, and they are not all the same amount of " +
+            "scrutiny. Domain Validation (DV) — the vast majority of certificates issued today, " +
+            "including every free Let's Encrypt cert — proves ONLY that you control the domain's DNS " +
+            "or web server (put a specific value in a DNS TXT record, or host a specific file at a " +
+            "specific URL). Fully automated, zero humans involved, issued in seconds. Organization " +
+            "Validation (OV) and especially Extended Validation (EV) go much further: confirming the " +
+            "organization's legal existence through official business registries, verifying a " +
+            "physical address, and — yes, this part you heard is real — a phone call to a " +
+            "verified business number, per the published CA/Browser Forum guidelines those higher " +
+            "tiers require. So \"they called me\" is true, but only for the small minority of certs " +
+            "that pay for that higher assurance level, not the free DV cert most small sites use."
+        },
+        Demo = new CipherDemo
+        {
+            InputLabel = "Subject name for a real, self-signed certificate",
+            DefaultInput = "CN=my-test-site.local",
+            Transform = (input, _) =>
+            {
+                try
+                {
+                    using var rsa = System.Security.Cryptography.RSA.Create(2048);
+                    var req = new System.Security.Cryptography.X509Certificates.CertificateRequest(
+                        input, rsa, System.Security.Cryptography.HashAlgorithmName.SHA256,
+                        System.Security.Cryptography.RSASignaturePadding.Pkcs1);
+                    using var cert = req.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(365));
+
+                    using var chain = new System.Security.Cryptography.X509Certificates.X509Chain();
+                    var trusted = chain.Build(cert);
+                    var statuses = string.Join(", ", chain.ChainStatus.Select(s => s.Status));
+
+                    return $"Subject:              {cert.Subject}\n" +
+                           $"Issuer:               {cert.Issuer}  <- same as Subject: nobody but itself vouches for this\n" +
+                           $"Valid:                {cert.NotBefore:yyyy-MM-dd} to {cert.NotAfter:yyyy-MM-dd}\n" +
+                           $"Signature algorithm:  {cert.SignatureAlgorithm.FriendlyName}\n" +
+                           $"Public key size:      {rsa.KeySize} bits\n" +
+                           $"Thumbprint:           {cert.Thumbprint}\n\n" +
+                           $"Chain trusted by this machine's root store? {(trusted ? "YES" : "NO")}" +
+                           (trusted ? "" : $"  ({(statuses.Length > 0 ? statuses : "untrusted")})");
+                }
+                catch (ArgumentException)
+                {
+                    return "Enter a valid X.509 subject name, e.g. CN=example.local";
+                }
+            },
+            Explain = (_, _) =>
+                "This is a REAL X.509 certificate, built and signed for real, with a real RSA key " +
+                "pair, just like a CA would build one — except Issuer and Subject are identical, " +
+                "because it signed itself; nobody else ever vouched for it. Watch the chain-trust " +
+                "check: it genuinely fails (\"UntrustedRoot\"), because this machine's root store " +
+                "has no reason to trust a certificate that only trusts itself. A real CA-issued " +
+                "certificate passes this exact same check only because its issuer traces back, " +
+                "signature by signature, to one of the roots already baked into your OS."
         }
     };
 

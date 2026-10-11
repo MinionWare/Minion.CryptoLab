@@ -87,13 +87,26 @@ built as a working app.
     *(demo: real AES-GCM run twice with the same key+nonce — proves
     C1 XOR C2 == P1 XOR P2 live, the identical two-time-pad failure from
     Lesson 9 wearing modern clothes)*
+12b. ChaCha20-Poly1305 — the other modern AEAD cipher *(demo: the exact
+    same nonce-reuse proof as Lesson 12, this time with real
+    ChaCha20-Poly1305, showing the failure is about keystream reuse in
+    general, not an AES-specific quirk)*
 13. Hashing vs. encryption — a completely different tool *(demo: real
     SHA-256/MD5, including a side-by-side hash of the input vs. the same
     text repeated 500x — both produce exactly 64 hex characters, making
     "fixed-size output, any input size" a checkable fact, not a claim)*
+13b. MD5 and SHA-1 are broken — what "broken" actually means *(demo: a
+    REAL birthday-paradox collision search against a truncated SHA-256
+    output — finds an actual collision in roughly sqrt(2^bits) tries for
+    whatever bit count you choose, live, not simulated, explaining why
+    hash size needs to be roughly double what you'd naively expect)*
 14. Salting *(demo: the exact "two users, same password" worked example
     from the planning discussion — real salts generated per click,
     identical password hashed three ways)*
+14b. Pepper — a second secret salt doesn't have *(demo: a real stolen-
+    database simulation — an attacker with the EXACT real password still
+    can't produce a matching hash without the pepper, which was never in
+    the database to steal)*
 15. Slow KDFs *(demo: REAL measured timing — raw SHA-256 loop vs. one
     PBKDF2 call, via `Stopwatch`, on the user's own machine, not an
     invented number)*
@@ -122,14 +135,33 @@ built as a working app.
     decrypt of whatever you type, showing the real modulus size, public
     exponent, and ciphertext byte length, with a second run proving the
     ciphertext is different every time due to OAEP's randomization)*
+18c. Digital signatures *(a full wax-seal/signet-ring scene, told start
+    to finish, then mapped piece by piece to private-key-signs/public-
+    key-verifies — the reverse key direction from encryption; a from-
+    scratch explanation of why you sign a HASH, not the document, tying
+    back to Lesson 13's hashing and Lesson 16's avalanche effect; the toy
+    RSA pair from 18b run in signing order with a tamper-detection proof;
+    demo: real RSA-PSS signing/verification on typed text, with a one-
+    character tamper shown failing verification for real)*
+18d. Certificates and PKI *(what's literally inside a cert — a field
+    bundle plus a signature over its hash, made by the issuer's private
+    key, directly reusing Lesson 18c's mechanism; chain of trust up to
+    pre-installed root certs; a concrete answer to "do CAs really call
+    you" — yes, but only for OV/EV certs, not the free DV certs most
+    sites use; demo: a REAL self-signed X.509 certificate built with
+    .NET's own `CertificateRequest`/`X509Chain` APIs, showing its real
+    fields and a real, genuinely-failing chain-trust check)*
 19. Randomness — PRNG vs. CSPRNG *(demo: a seeded `Random` reliably
     repeats; `RandomNumberGenerator` never does)*
 20. Wrap-up — pointer to the (not yet built) Lab catalog and Quiz Mode
 
-Lessons 20+ (signatures, certificates/PKI and what a CA verification
-process actually involves, a symmetric/asymmetric-primitive compatibility
-matrix, and dedicated salt/pepper/nonce/IV and padding-math lessons) are
-planned next, not yet built.
+Still planned, not yet built: a symmetric/asymmetric-primitive
+compatibility matrix (which algorithms need an IV vs. a nonce vs. a salt,
+which need padding and why, RSA's OAEP vs. block-cipher PKCS7 padding
+being the same word for unrelated concepts), and a modern password-KDF
+survey (bcrypt/scrypt/Argon2 vs. PBKDF2) — the latter would need a new
+NuGet dependency or two since .NET's BCL doesn't ship those algorithms,
+worth flagging before adding.
 
 ## Verification approach
 
@@ -181,6 +213,21 @@ being written into the C# tutorial content:
   throwaway console harness before shipping, alongside a full run of
   every tutorial step to catch regressions from inserting a new lesson
   mid-sequence.
+- The toy RSA signing example (signing order: private exponent first,
+  then verify with the public exponent) was verified in PowerShell as
+  its own, separate check from the encryption-direction math, including
+  the tamper-detection case (a changed hash fails to verify).
+- ChaCha20-Poly1305's nonce-reuse keystream cancellation was verified
+  for real (`C1 XOR C2 == P1 XOR P2`) independently before writing the
+  lesson, using .NET's actual `ChaCha20Poly1305` class.
+- The birthday-paradox collision demo was verified by actually running
+  the brute-force search in PowerShell against a 16-bit truncated
+  SHA-256 output, confirming a real collision surfaces in roughly
+  sqrt(2^16)=256 tries (the live demo found one in 264) — not anywhere
+  near 65,536.
+- The self-signed-certificate demo's chain-trust failure (`UntrustedRoot`)
+  was confirmed against .NET's real `X509Chain` API in PowerShell before
+  being described as a certainty in the lesson text.
 - PBKDF2-vs-SHA256 timing ratio measured for real (not estimated) before
   writing the lesson text describing it.
 - The toy Diffie-Hellman example's shared-secret match confirmed.

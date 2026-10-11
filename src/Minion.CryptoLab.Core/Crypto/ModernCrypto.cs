@@ -56,6 +56,18 @@ public static class ModernCrypto
         return ciphertext;
     }
 
+    /// <summary>Real ChaCha20-Poly1305 encryption exposing the raw ciphertext and tag — the other
+    /// modern AEAD cipher alongside AES-GCM, used to show it inherits the identical nonce-reuse
+    /// failure (it's fundamentally a keystream XOR too).</summary>
+    public static byte[] ChaCha20Poly1305Encrypt(byte[] plaintext, byte[] key, byte[] nonce, out byte[] tag)
+    {
+        var ciphertext = new byte[plaintext.Length];
+        tag = new byte[16];
+        using var chacha = new ChaCha20Poly1305(key);
+        chacha.Encrypt(nonce, plaintext, ciphertext, tag);
+        return ciphertext;
+    }
+
     public static string Md5Hex(string input) => Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
 
     public static string Sha256Hex(string input) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
