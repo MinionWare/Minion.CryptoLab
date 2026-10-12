@@ -53,8 +53,25 @@
                 <ItemsControl ItemsSource="{Binding CurrentStep.Paragraphs, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Mode=OneTime}" Style="{StaticResource Text.Body}" Margin="0,0,0,12"
-                                       FontFamily="{Binding Mode=OneTime, Converter={StaticResource MultilineToFontConverter}}"/>
+                            <TextBlock Text="{Binding Mode=OneTime, Converter={StaticResource HeadingDisplayTextConverter}}"
+                                       Margin="0,0,0,12"
+                                       FontFamily="{Binding Mode=OneTime, Converter={StaticResource MultilineToFontConverter}}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+                                        <Style.Triggers>
+                                            <DataTrigger Value="True">
+                                                <DataTrigger.Binding>
+                                                    <Binding Mode="OneTime" Converter="{StaticResource IsHeadingConverter}"/>
+                                                </DataTrigger.Binding>
+                                                <Setter Property="FontSize" Value="16"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+                                                <Setter Property="Margin" Value="0,18,0,8"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

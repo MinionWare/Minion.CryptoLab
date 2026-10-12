@@ -122,15 +122,16 @@ public static class TutorialContent
         Title = "Two famous special cases",
         Paragraphs = new[]
         {
+            "## ROT13",
             "ROT13 is just a Caesar shift of exactly 13 — nothing new mathematically, just the same " +
             "(position + shift) mod 26 formula from Lesson 2 with the shift locked to 13 forever. " +
             "Spelled out letter by letter on the word \"CIPHER\" (position numbers from the same " +
-            "A=0...Z=25 scheme as always):\n\n" +
+            "A=0...Z=25 scheme as always):",
             "Letter:        C    I    P    H    E    R\n" +
             "Position:      2    8    15   7    4    17\n" +
             "+13:           15   21   28   20   17   30\n" +
             "mod 26:        15   21   2    20   17   4\n" +
-            "Result:        P    V    C    U    R    E\n\n" +
+            "Result:        P    V    C    U    R    E",
             "So ROT13(\"CIPHER\") = \"PVCURE\". Notice position 15 (\"P\" in \"+13\" row, from " +
             "letter 'C') wrapped around at 28 mod 26 = 2, landing back on 'C' — same wraparound " +
             "math as Caesar, just always by exactly 13.",
@@ -142,14 +143,15 @@ public static class TutorialContent
             "then +13 again, totaling +26, totaling +0. It's still used today on forums to hide " +
             "spoilers or puzzle answers from casual glances — it was never meant to be secure, and " +
             "the moment someone knows it's ROT13, there's no key left to find.",
+            "## Atbash",
             "Atbash is older (it appears in the Hebrew Bible) and uses a different formula: instead " +
             "of adding a shift, it reflects each position across the middle of the alphabet — " +
             "position p maps to position (25 - p), so A(0)<->Z(25), B(1)<->Y(24), and so on inward. " +
-            "Same word, same letter-by-letter breakdown:\n\n" +
+            "Same word, same letter-by-letter breakdown:",
             "Letter:        C    I    P    H    E    R\n" +
             "Position (p):  2    8    15   7    4    17\n" +
             "25 - p:        23   17   10   18   21   8\n" +
-            "Result:        X    R    K    S    V    I\n\n" +
+            "Result:        X    R    K    S    V    I",
             "Atbash(\"CIPHER\") = \"XRKSVI\". It undoes itself for an even simpler reason than ROT13: " +
             "25 - (25 - p) = p, always, for any p — reflecting a reflection lands you back where you " +
             "started, by definition, with no modular wraparound even needed. Check it on 'X' " +
@@ -183,18 +185,20 @@ public static class TutorialContent
             "Caesar's shift is really just one very narrow, predictable kind of substitution (the " +
             "scramble is always \"shift everything the same amount\") — this is the fully general " +
             "version, where each letter's replacement is picked independently.",
-            "Worked example: key \"QWERTYUIOPASDFGHJKLZXCVBNM\" (26 letters, a scrambled alphabet — " +
-            "read it as \"a maps to whatever's in position 0 of this key, b maps to position 1," +
-            "\" and so on). Encrypt \"CAT\", letter by letter, by looking up each letter's POSITION " +
-            "(same A=0...Z=25 numbering as always) in that key string:\n\n" +
+            "## A worked example",
+            "Key \"QWERTYUIOPASDFGHJKLZXCVBNM\" (26 letters, a scrambled alphabet — read it as " +
+            "\"a maps to whatever's in position 0 of this key, b maps to position 1,\" and so on). " +
+            "Encrypt \"CAT\", letter by letter, by looking up each letter's POSITION (same " +
+            "A=0...Z=25 numbering as always) in that key string:",
             "Letter:              C         A         T\n" +
             "Position:            2         0         19\n" +
             "Key string index:    key[2]    key[0]    key[19]\n" +
-            "Key letter there:    E         Q         Z\n\n" +
+            "Key letter there:    E         Q         Z",
             "So \"CAT\" becomes \"EQZ\" — 'C' (position 2) became whatever sits at INDEX 2 of the key " +
             "(\"E\"), 'A' (position 0, the very first slot) became index 0 of the key (\"Q\"), and " +
             "'T' (position 19) became index 19 of the key (\"Z\"). Every letter of the message looks " +
             "up its own position in that one 26-letter key string — that's the entire cipher.",
+            "## Building the keyspace number",
             "Here's the number that should sound reassuring, and — unlike earlier lessons — let's " +
             "actually build it instead of just stating it. The key is a scrambled alphabet, so " +
             "picking one means deciding what 'A' maps to, then what 'B' maps to, and so on. 'A' can " +
@@ -239,15 +243,16 @@ public static class TutorialContent
             "it can hide WHICH letter means \"E\" — but it can't hide the fact that SOME letter in " +
             "the ciphertext is going to show up roughly 1-in-8 times, because that letter is " +
             "standing in for E on every single occurrence, every single time.",
-            "Concretely: take \"THE TREE NEEDS WATER\" — a short sentence, chosen because it " +
-            "happens to use the letter E six times. Encrypt it with a Caesar shift of 3 (Lesson 2's " +
-            "cipher, picked only because it's the simplest possible substitution — the argument " +
-            "below works identically for the fully scrambled kind from Lesson 4):\n\n" +
+            "## A worked example",
+            "Take \"THE TREE NEEDS WATER\" — a short sentence, chosen because it happens to use the " +
+            "letter E six times. Encrypt it with a Caesar shift of 3 (Lesson 2's cipher, picked only " +
+            "because it's the simplest possible substitution — the argument below works identically " +
+            "for the fully scrambled kind from Lesson 4):",
             "Plaintext:  THE TREE NEEDS WATER\n" +
-            "Ciphertext: WKH WUHH QHHGV ZDWHU\n\n" +
+            "Ciphertext: WKH WUHH QHHGV ZDWHU",
             "Now just COUNT the letters in that ciphertext, ignoring what they actually decrypt to — " +
-            "pretend you don't know the key at all:\n\n" +
-            "H: 6   W: 3   U: 2   K: 1   Z: 1   Q: 1   G: 1   D: 1   V: 1\n\n" +
+            "pretend you don't know the key at all:",
+            "H: 6   W: 3   U: 2   K: 1   Z: 1   Q: 1   G: 1   D: 1   V: 1",
             "'H' towers over every other letter, 6 occurrences against 3 or fewer for everything " +
             "else — and 'H' is exactly the letter E became under this key (E is position 4, " +
             "4+3=7='H', same formula as every Caesar example so far). You didn't need the key, or " +
@@ -297,16 +302,17 @@ public static class TutorialContent
             "of letters, it just starts over from its own beginning and keeps going, for as long as " +
             "the message runs. Each key letter means \"shift by this many places,\" exactly like a " +
             "Caesar shift: A=0, B=1, C=2, ... Z=25.",
+            "## Worked example 1: \"ATTACKATDAWN\" / \"LEMON\"",
             "First, the key itself, converted to numbers the same A=0...Z=25 way — this is the " +
-            "ENTIRE source of every shift below, nothing about it is random:\n\n" +
-            "L=11   E=4   M=12   O=14   N=13\n\n" +
+            "ENTIRE source of every shift below, nothing about it is random:",
+            "L=11   E=4   M=12   O=14   N=13",
             "Here's the first example spelled out completely, letter by letter, key \"LEMON\" lined " +
             "up under message \"ATTACKATDAWN\" (the key repeats: L-E-M-O-N-L-E-M-O-N-L-E once it " +
-            "runs out at letter 6):\n\n" +
+            "runs out at letter 6):",
             "Plaintext:  A   T   T   A   C   K   A   T   D   A   W   N\n" +
             "Key letter: L   E   M   O   N   L   E   M   O   N   L   E\n" +
             "Shift by:   11  4   12  14  13  11  4   12  14  13  11  4\n" +
-            "Ciphertext: L   X   F   O   P   V   E   F   R   N   H   R\n\n" +
+            "Ciphertext: L   X   F   O   P   V   E   F   R   N   H   R",
             "Read any one column top to bottom: plaintext 'A' (position 0 in the alphabet) shifted " +
             "by key letter 'L' (11, from the legend above) lands on position 0+11=11, which is 'L'. " +
             "Next column: 'T' (position 19) shifted by 'E' (4) lands on 19+4=23, which is 'X'. Keep " +
@@ -323,14 +329,15 @@ public static class TutorialContent
             "lined up underneath it both times. That's the entire mechanism that defeats plain " +
             "frequency analysis — the same input letter no longer reliably becomes the same output " +
             "letter.",
+            "## Worked example 2: \"HELLOWORLD\" / \"KEY\"",
             "One more full example, different words, so the pattern is unmistakable — message " +
             "\"HELLOWORLD\" with the short 3-letter key \"KEY\" (repeating as K-E-Y-K-E-Y-K-E-Y-K, " +
             "three full times plus one letter). Key legend first: K=10, E=4, Y=24 — and that's it, " +
-            "only three distinct shift values exist anywhere in this entire example:\n\n" +
+            "only three distinct shift values exist anywhere in this entire example:",
             "Plaintext:  H   E   L   L   O   W   O   R   L   D\n" +
             "Key letter: K   E   Y   K   E   Y   K   E   Y   K\n" +
             "Shift by:   10  4   24  10  4   24  10  4   24  10\n" +
-            "Ciphertext: R   I   J   V   S   U   Y   V   J   N\n\n" +
+            "Ciphertext: R   I   J   V   S   U   Y   V   J   N",
             "'H' (position 7) shifted by 'K' (10) is 7+10=17 → 'R'. 'L' (position 11) appears three " +
             "times in this message and shifts by 'Y' (24), 'K' (10), and 'Y' (24) in turn — landing " +
             "on 'J', 'V', and 'J' again. Same plaintext letter, three different ciphertext letters, " +
@@ -457,63 +464,62 @@ public static class TutorialContent
             "Everything from here on works on BITS, not letters — the 0s and 1s a computer actually " +
             "stores. If you've never worked with bits or binary before, start here, slowly, because " +
             "every remaining lesson in this tutorial builds on this one operation.",
+
+            "## The XOR rule",
             "XOR (\"exclusive or\") takes two single bits and produces one bit back. It asks exactly " +
             "one question: ARE THE TWO INPUT BITS DIFFERENT? If yes, the result is 1. If they're the " +
             "same, the result is 0. That is the ENTIRE rule — there is nothing else to it. Written " +
-            "out as every possible case (only four exist, since a bit is only ever 0 or 1):\n" +
-            "\n" +
+            "out as every possible case (only four exist, since a bit is only ever 0 or 1):",
             "  Bit A   Bit B   A XOR B   (same as each other?)\n" +
             "    0       0        0      yes -> 0\n" +
             "    0       1        1      no  -> 1\n" +
             "    1       0        1      no  -> 1\n" +
             "    1       1        0      yes -> 0",
+
+            "## Why XOR-ing twice undoes itself",
             "Now the part that makes XOR useful for a cipher: XOR-ing a result with the SAME bit " +
             "again always undoes it, for both possible keys, with no exceptions — because there are " +
-            "only four cases total, we can just check every single one, by hand:\n" +
-            "\n" +
+            "only four cases total, we can just check every single one, by hand:",
             "  Plain(P)  Key(K)  Encrypt: C=P XOR K  Decrypt: C XOR K   Got P back?\n" +
             "     0        0            0                 0               yes\n" +
             "     0        1            1                 0               yes\n" +
             "     1        0            1                 1               yes\n" +
-            "     1        1            0                 1               yes\n" +
-            "\n" +
+            "     1        1            0                 1               yes",
             "Look at the \"Decrypt\" column: it's identical to the original \"Plain\" column, every " +
             "single time, no matter what P or K were. That's not a coincidence that happens to work " +
             "for these numbers — it's EVERY possible case for a single bit, so there's nothing left " +
             "to be wrong. That is the entire mathematical proof that \"XOR the same key twice\" always " +
             "gets you back to where you started.",
+
+            "## Scaling up to a whole byte",
             "A letter isn't one bit, though — it's a whole BYTE, 8 bits glued together, and XOR just " +
             "does the exact same single-bit operation 8 times, once per matching position, completely " +
             "independently. Take the letter 'H' and XOR it with the letter 'o' used as a one-byte " +
             "\"key\" — first, their bits (every letter has a fixed binary code; 'H' is always " +
-            "01001000, 'o' is always 01101111):\n" +
-            "\n" +
+            "01001000, 'o' is always 01101111):",
             "  'H' (plaintext):  0 1 0 0 1 0 0 0\n" +
             "  'o' (key):        0 1 1 0 1 1 1 1\n" +
-            "  XOR, bit by bit:  0 0 1 0 0 1 1 1   <- compare each column above using the table higher up\n" +
-            "\n" +
+            "  XOR, bit by bit:  0 0 1 0 0 1 1 1   <- compare each column above using the table higher up",
             "Read the 8 result bits left to right as one byte: 00100111. Converted from binary, that's " +
             "the number 39, which is the character ' (an apostrophe) — scrambled, unreadable as " +
             "'H', exactly what we want from encryption.",
             "Now undo it — decrypt by XOR-ing that SAME result with the SAME key again, bit by bit, " +
-            "no different operation needed:\n" +
-            "\n" +
+            "no different operation needed:",
             "  00100111 (ciphertext, the apostrophe):  0 0 1 0 0 1 1 1\n" +
             "  'o' (the same key again):                0 1 1 0 1 1 1 1\n" +
-            "  XOR, bit by bit:                         0 1 0 0 1 0 0 0\n" +
-            "\n" +
+            "  XOR, bit by bit:                         0 1 0 0 1 0 0 0",
             "Read those 8 bits: 01001000 = 72 = 'H'. Back to the original letter, using the identical " +
             "XOR operation both times — nothing marked \"decrypt mode,\" nothing reversed, just XOR " +
             "with the same key a second time.",
+
+            "## Scaling up to a short string",
             "One letter is a good start, but a real message is a short STRING of letters, each one " +
             "XOR-ed with its own key byte in the same position. Keeping it short on purpose: encrypt " +
             "\"HI\" (2 letters) with the 2-letter key \"ok\" — 'H' pairs with 'o' (worked out above, " +
-            "giving the apostrophe), and 'I' pairs with 'k':\n" +
-            "\n" +
+            "giving the apostrophe), and 'I' pairs with 'k':",
             "  'I' (plaintext):  0 1 0 0 1 0 0 1\n" +
             "  'k' (key):        0 1 1 0 1 0 1 1\n" +
-            "  XOR, bit by bit:  0 0 1 0 0 0 1 0\n" +
-            "\n" +
+            "  XOR, bit by bit:  0 0 1 0 0 0 1 0",
             "That byte, 00100010, is 34 — the character \" (a double quote). So \"HI\" XOR \"ok\", " +
             "letter by letter, byte by byte, gives you two punctuation marks: the apostrophe from " +
             "before, then this double quote — ciphertext \"'\\\"\" (both characters together). Nothing " +
@@ -530,6 +536,8 @@ public static class TutorialContent
             "idea as Vigenère, just operating on raw bits instead of letters-mod-26. The live demo " +
             "below does exactly this, on whatever you type, and shows you the real ciphertext bytes " +
             "as hex.",
+
+            "## The one-time pad",
             "Now take the repeating-key idea to its logical extreme: what if the \"key\" is exactly " +
             "as long as the message, made of truly random bits, and used exactly once, ever — never " +
             "repeated at all? That's the one-time pad — and it is mathematically, provably " +
@@ -593,7 +601,7 @@ public static class TutorialContent
             "algebra isn't just symbol-shuffling — it's Lesson 8's single-bit proof (XOR-ing a value " +
             "with itself always gives 0, and XOR-ing anything with 0 leaves it unchanged) applied to " +
             "a whole byte instead of one bit. Here it is with real numbers, one letter each, same " +
-            "hidden key byte 10011001 (0x99) reused for both — exactly the mistake, right here:\n\n" +
+            "hidden key byte 10011001 (0x99) reused for both — exactly the mistake, right here:",
             "  'A' (P1):        0 1 0 0 0 0 0 1\n" +
             "  Key (K):         1 0 0 1 1 0 0 1\n" +
             "  C1 = P1 XOR K:   1 1 0 1 1 0 0 0   (0xd8)\n" +
@@ -603,8 +611,7 @@ public static class TutorialContent
             "  C2 = P2 XOR K:   1 1 0 1 1 0 1 1   (0xdb)\n" +
             "\n" +
             "  C1 XOR C2:       0 0 0 0 0 0 1 1   (0x03)\n" +
-            "  P1 XOR P2:       0 0 0 0 0 0 1 1   (0x03)   <- identical to C1 XOR C2, with no key involved\n" +
-            "\n" +
+            "  P1 XOR P2:       0 0 0 0 0 0 1 1   (0x03)   <- identical to C1 XOR C2, with no key involved",
             "The attacker computing \"C1 XOR C2\" never touched K at all, yet landed on the exact " +
             "same byte as \"P1 XOR P2\" — because K appeared in both C1 and C2, and XOR-ing those two " +
             "together cancels it out the same way any value XOR'd with itself does. That's not the " +
@@ -1532,6 +1539,7 @@ public static class TutorialContent
         Title = "A key that can't undo its own lock: public and private keys",
         Paragraphs = new[]
         {
+            "## The problem this solves",
             "Diffie-Hellman (last lesson) solves ONE specific problem: two people who both show up " +
             "at the same time can agree on a shared secret in front of an eavesdropper. But what if " +
             "someone wants to send YOU something secret without either of you being online at the " +
@@ -1539,93 +1547,108 @@ public static class TutorialContent
             "you posted publicly somewhere, with you reading it hours or days later? That needs a " +
             "completely different kind of key — one that comes in two parts that do different jobs, " +
             "instead of one shared secret both sides hold equally.",
-            "Here's the scene, start to finish, before any math at all. You want to be able to " +
-            "receive secret notes from anyone — a friend, a stranger, anyone — sent through the " +
-            "mail, where anybody along the way could grab the package and look inside.\n\n" +
+
+            "## The scene, before any math at all",
+            "You want to be able to receive secret notes from anyone — a friend, a stranger, anyone " +
+            "— sent through the mail, where anybody along the way could grab the package and look " +
+            "inside.",
             "So you buy a padlock. Here's the one fact that makes this whole thing work, and it's " +
             "true of a REAL physical padlock, no trick involved: locking it needs no key at all. You " +
             "just push the shackle in until it clicks shut. Anyone can do that, with zero " +
             "information. Only opening it needs the key — one specific physical key, cut to match " +
-            "that one padlock.\n\n" +
+            "that one padlock.",
             "You take that key and put it on a chain around your own neck. It never comes off, never " +
-            "gets copied, never gets mailed anywhere.\n\n" +
+            "gets copied, never gets mailed anywhere. (In Windows, you can go even further — a " +
+            "certificate's private key can be flagged non-exportable right in the OS, so there's no " +
+            "copy command that ever gets it off that one machine. That flag applies per INSTALLED " +
+            "COPY, not to the key pair itself: you can still put the same key on several machines by " +
+            "exporting one master copy first, then marking each installed copy non-exportable " +
+            "afterward. The only way to truly have just one copy anywhere is to generate it directly " +
+            "in a non-exportable or hardware-bound context — a TPM or HSM — where no exportable file " +
+            "is ever produced at all, and losing that one machine really does lose it for good.)",
             "The padlock itself — unlocked, open, ready to snap shut — you make as many copies of as " +
             "you want, and hand them out to absolutely anyone who asks. Your friend. A stranger. " +
             "Someone you don't even trust. It doesn't matter, because an open padlock sitting in " +
             "someone's hand can't do anything dangerous by itself — all it can do is get snapped " +
-            "shut, and snapping it shut is the one thing that needs no key.\n\n" +
+            "shut, and snapping it shut is the one thing that needs no key.",
             "Your friend wants to send you a note. They write it, put it in a box, and snap one of " +
             "your padlocks shut on the box. Notice what just happened: they needed no key to do " +
             "that. And notice something else — your friend can no longer open that box either. They " +
             "just locked themselves out of their own note, using nothing but a padlock you handed " +
-            "out for free.\n\n" +
+            "out for free.",
             "They mail the box. Anyone who intercepts it along the way sees a locked box and is in " +
             "the exact same position your friend is: they can push the shackle, sure, but they can't " +
-            "pull it open, because they don't have the one key on the chain around your neck.\n\n" +
+            "pull it open, because they don't have the one key on the chain around your neck.",
             "The box arrives. You take the one key only you have, unlock it, and read the note.",
-            "Mapping that scene to the digital version, piece by piece:\n\n" +
+
+            "## Mapping the scene to the digital version",
             "- The padlock you hand out to anyone -> your PUBLIC key. Handing it to your worst " +
             "enemy is fine — it was never a secret, and was never meant to be one.\n" +
             "- Snapping the padlock shut (no key needed) -> ENCRYPTING with the public key — " +
             "running the message through the public key's numbers.\n" +
-            "- The one key on the chain around your neck -> your PRIVATE key. (In Windows, you can " +
-            "go further than just keeping it safe — a certificate's private key can be flagged " +
-            "non-exportable right in the OS, so there's no copy command that ever gets it off the " +
-            "machine at all.)\n" +
+            "- The one key on the chain around your neck -> your PRIVATE key.\n" +
             "- Only that one key opening that one padlock -> only the PRIVATE key's numbers can " +
             "reverse what the public key's numbers did. Not \"won't\" — can't. The information " +
             "needed to reverse it was never in the public copy to begin with.\n" +
             "- Anyone being able to have a copy of the open padlock -> public keys are meant to be " +
             "given to literally anyone, including people you don't trust.",
-            "Now the real numbers — what's actually different about the two \"keys\" — but first, one " +
-            "building-block number that shows up in a second: the TOTIENT of a number n (written " +
-            "φ(n), \"Euler's totient,\" 1760s) is just a count: how many whole numbers from 1 up " +
-            "to n share NO common factor with n? Small example first: n=10. The numbers 1-9 are " +
-            "1,2,3,4,5,6,7,8,9. Cross out anything sharing a factor with 10 (10=2x5): 2, 4, 6, 8 all " +
-            "share a factor of 2; 5 shares a factor of 5. What's left: 1, 3, 7, 9 — four numbers. So " +
-            "φ(10)=4. Handy shortcut when n is two primes multiplied together: (2-1)x(5-1) = " +
-            "1x4 = 4 — same answer, no counting needed. That shortcut is why φ(55) = " +
-            "(5-1)x(11-1) = 4x10 = 40 further down, without checking all 54 numbers by hand (it was " +
-            "checked by computer before writing this, and the brute-force count really is 40).",
-            "Why does this counting exercise matter for encryption at all? Because of a real, proven " +
-            "mathematical fact (Euler's theorem): raise ANY number m that shares no factor with n up " +
-            "to the power of φ(n), then take the result mod n, and you always land on exactly 1 " +
-            "— no matter what m is. Check it concretely: m=3, n=10, φ(10)=4 -> 3^4 mod 10 = 81 " +
-            "mod 10 = 1. Exactly 1. That single fact is the entire reason picking e and d so that " +
-            "(e x d) mod φ(n) = 1 makes \"encrypt then decrypt\" land you back on the original " +
-            "message — e x d works out to some multiple of φ(n) plus exactly 1 left over, and " +
-            "that leftover +1 is the only part that survives once everything else cancels out via " +
+
+            "## A building block: what's a \"totient\"",
+            "The real numbers below need one building-block number first: the TOTIENT of a number " +
+            "n (written φ(n), \"Euler's totient,\" 1760s) is just a count — how many whole numbers " +
+            "from 1 up to n share NO common factor with n? Small example first: n=10. The numbers " +
+            "1-9 are 1,2,3,4,5,6,7,8,9. Cross out anything sharing a factor with 10 (10=2x5): 2, 4, " +
+            "6, 8 all share a factor of 2; 5 shares a factor of 5. What's left: 1, 3, 7, 9 — four " +
+            "numbers. So φ(10)=4.",
+            "Handy shortcut when n is two primes multiplied together: (2-1)x(5-1) = 1x4 = 4 — same " +
+            "answer, no counting needed. That shortcut is why φ(55) = (5-1)x(11-1) = 4x10 = 40 " +
+            "further down, without checking all 54 numbers by hand (it was checked by computer " +
+            "before writing this, and the brute-force count really is 40).",
+            "Why does this counting exercise matter for encryption at all? Because of a real, " +
+            "proven mathematical fact (Euler's theorem): raise ANY number m that shares no factor " +
+            "with n up to the power of φ(n), then take the result mod n, and you always land on " +
+            "exactly 1 — no matter what m is. Check it concretely: m=3, n=10, φ(10)=4 -> 3^4 mod 10 " +
+            "= 81 mod 10 = 1. Exactly 1. That single fact is the entire reason picking e and d so " +
+            "that (e x d) mod φ(n) = 1 makes \"encrypt then decrypt\" land you back on the original " +
+            "message — e x d works out to some multiple of φ(n) plus exactly 1 left over, and that " +
+            "leftover +1 is the only part that survives once everything else cancels out via " +
             "Euler's theorem.",
-            "Okay — the actual key generation. Pick two small primes: p=5, q=11. Multiply: n = 5 x " +
-            "11 = 55 — this number ends up in BOTH keys, it's the \"size of the padlock,\" shared, " +
-            "not secret by itself. Compute the totient: (5-1)x(11-1) = 40 (used only to build the " +
-            "keys, then it must never be shared again — see the attack below for exactly why).\n\n" +
+
+            "## The real key generation",
+            "Pick two small primes: p=5, q=11. Multiply: n = 5 x 11 = 55 — this number ends up in " +
+            "BOTH keys, it's the \"size of the padlock,\" shared, not secret by itself. Compute the " +
+            "totient: (5-1)x(11-1) = 40 (used only to build the keys, then it must never be shared " +
+            "again — see the attack below for exactly why).",
             "Pick a small public number e=7. Find a number d where (e x d) mod 40 = 1 — that number " +
-            "is d=23, because 7 x 23 = 161, and 161 mod 40 = 1.\n\n" +
+            "is d=23, because 7 x 23 = 161, and 161 mod 40 = 1.",
             "  Public key (the padlock):      n=55, e=7\n" +
-            "  Private key (the chain key):   n=55, d=23\n\n" +
+            "  Private key (the chain key):   n=55, d=23",
             "Both have 55. The ENTIRE difference between \"can only lock\" and \"can unlock\" is one " +
             "number: e=7 vs. d=23.",
+
+            "## Locking and unlocking, for real",
             "Snapping the padlock shut, for real: message = 9. Encrypt with the public pair: " +
-            "9^7 mod 55 = 4. Send 4.\n\n" +
+            "9^7 mod 55 = 4. Send 4.",
             "Opening it with the one real key: decrypt with the private pair: 4^23 mod 55 = 9. Back " +
-            "to the original message.\n\n" +
+            "to the original message.",
             "Proof the public key really can't open it: try \"decrypting\" that same 4 using the " +
             "PUBLIC number instead of the private one — 4^7 mod 55 = 49. Not 9. Garbage — because " +
             "the public key never contained 23 anywhere, so there's nothing in it capable of " +
-            "reversing the lock.\n\n" +
+            "reversing the lock.",
             "One more, so it repeats: message = 3. Public pair encrypts: 3^7 mod 55 = 42. Private " +
             "pair decrypts: 42^23 mod 55 = 3. Same padlock, same chain key, every time.",
+
+            "## Why real keys need enormous primes",
             "Here's exactly what survives after key generation and what doesn't, and why that split " +
             "is safe: n is published, part of both keys. p, q, and the totient (40) must never be " +
             "shared — not because they're \"used up,\" but because they're AS dangerous as d itself. " +
             "Watch what happens when an attacker who has ONLY the public key (n=55, e=7 — nothing " +
-            "else) tries to rebuild the private key from scratch:\n\n" +
+            "else) tries to rebuild the private key from scratch:",
             "  Step 1 - factor n:        55 = 5 x 11          (found instantly, just try 2,3,4,5...)\n" +
             "  Step 2 - rebuild totient: (5-1) x (11-1) = 40\n" +
             "  Step 3 - rebuild d:       same search as before -> d=23\n" +
-            "  Step 4 - decrypt a\n" +
-            "            stolen ciphertext (4): 4^23 mod 55 = 9   <- fully cracked, no private key ever handed over\n\n" +
+            "  Step 4 - decrypt the\n" +
+            "           stolen ciphertext (4):  4^23 mod 55 = 9   <- fully cracked, no private key ever handed over",
             "That took a computer a fraction of a millisecond, because factoring 55 means just " +
             "trying small numbers until one divides evenly. This is the ENTIRE reason real RSA keys " +
             "use enormous primes — not 1-2 digits like this demo, but roughly 300 digits each, " +
@@ -1715,11 +1738,12 @@ public static class TutorialContent
             "after signing, the hash changes completely (the avalanche effect from Lesson 16's HMAC " +
             "demo applies here too, same property, different algorithm), and the old signature no " +
             "longer matches anything.",
-            "The real math is RSA again, just run with the exponents in the opposite order from " +
-            "encryption. Reusing the exact same toy key pair from last lesson (n=55, e=7, d=23) and " +
-            "pretending a document hashes down to the small number 9:\n\n" +
+            "## The real math",
+            "RSA again, just run with the exponents in the opposite order from encryption. Reusing " +
+            "the exact same toy key pair from last lesson (n=55, e=7, d=23) and pretending a " +
+            "document hashes down to the small number 9:",
             "  Sign (private key first):   9^23 mod 55 = 14   <- the \"signature\"\n" +
-            "  Verify (public key second):  14^7 mod 55 = 9    <- matches the original hash, signature is valid\n\n" +
+            "  Verify (public key second):  14^7 mod 55 = 9    <- matches the original hash, signature is valid",
             "And the tamper check: if the document had been altered so its hash came out as 10 " +
             "instead of 9, the verifier would compare 9 (what the old signature actually proves) " +
             "against 10 (what the document NOW hashes to) — they don't match, so verification fails, " +
