@@ -2,11 +2,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Minion.CryptoLab.Core\Minion.CryptoLab.Core.csproj" />
+    <!-- UpdateCheckService/IJSONHandler now live centrally here instead of being copy-pasted
+         per app: see Minion.Licensing's own docs for why. -->
+    <ProjectReference Include="..\..\..\Minion.Licensing\Minion.Licensing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <!-- Same convention as Minion.Agent.Wpf / Minion.InjectionLab.Wpf: a real,
@@ -20,7 +22,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>

@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using Minion.CryptoLab.Wpf.Services;
+using Minion.Licensing.Updates;
 
 namespace Minion.CryptoLab.Wpf;
 
 public partial class MainWindow : Window
 {
-    private readonly UpdateCheckService _updateCheckService = new();
+    private readonly UpdateCheckService _updateCheckService = new("Minion.CryptoLab");
     private UpdateManifest? _pendingUpdateManifest;
 
     public MainWindow()
