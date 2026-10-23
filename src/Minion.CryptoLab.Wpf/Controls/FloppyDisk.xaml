@@ -1,0 +1,43 @@
+<UserControl x:Class="Minion.CryptoLab.Wpf.Controls.FloppyDisk"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root" Width="170" Height="172">
+    <Grid>
+        <!-- Body: 12px clipped bottom-left corner. -->
+        <Border CornerRadius="0,6,6,0" Background="{Binding BodyBrush, ElementName=Root}">
+            <Border.Clip>
+                <PathGeometry>
+                    <PathFigure StartPoint="0,12" IsClosed="True">
+                        <LineSegment Point="12,0"/>
+                        <LineSegment Point="170,0"/>
+                        <LineSegment Point="170,172"/>
+                        <LineSegment Point="0,172"/>
+                    </PathFigure>
+                </PathGeometry>
+            </Border.Clip>
+        </Border>
+
+        <!-- Metal shutter. -->
+        <Border Width="92" Height="54" VerticalAlignment="Top" Margin="0,10,0,0" CornerRadius="2">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#E3E6EA" Offset="0"/>
+                    <GradientStop Color="#A3AAB1" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border Width="56" Height="10" Background="#2B2E33" CornerRadius="1" VerticalAlignment="Top" Margin="0,6,0,0"/>
+        </Border>
+
+        <!-- Label. -->
+        <Border Height="108" VerticalAlignment="Bottom" Background="{Binding LabelBrush, ElementName=Root}" Padding="10,8">
+            <StackPanel>
+                <TextBlock Text="{Binding PersonName, ElementName=Root}" FontFamily="./Resources/Fonts/#Caveat" FontWeight="Bold" FontSize="18"
+                           Foreground="{Binding PenBrush, ElementName=Root}"/>
+                <TextBlock Text="{Binding SaltText, ElementName=Root}" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="9"
+                           Foreground="#7A4A12" Margin="0,4,0,0"/>
+                <TextBlock Text="{Binding HashText, ElementName=Root}" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontWeight="SemiBold"
+                           FontSize="10" Foreground="#1D2024" TextWrapping="Wrap" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

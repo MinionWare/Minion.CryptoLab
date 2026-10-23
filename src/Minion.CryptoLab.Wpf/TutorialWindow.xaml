@@ -323,6 +323,57 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- ============ Lesson 14: salting floppy disks ============ -->
+                        <StackPanel Visibility="{Binding IsSaltingLesson, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,4,0,24">
+                            <Border Background="{DynamicResource Era.PanelRaised}" CornerRadius="10" Padding="14,10" BorderThickness="1" BorderBrush="{DynamicResource Era.Line}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="SHARED PASSWORD" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Era.Faint}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                                    <TextBox Grid.Column="1" Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Background="Transparent"
+                                             FontFamily="./Resources/Fonts/#IBM Plex Mono" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource Era.Ink}" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="2" Content="New salts" Style="{StaticResource Frame.Button.Primary}" Command="{Binding NewSaltsCommand}"/>
+                                </Grid>
+                            </Border>
+
+                            <Grid Margin="0,18,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Padding="16" CornerRadius="10" Background="{DynamicResource Era.ActiveRow}">
+                                    <StackPanel>
+                                        <TextBlock Text="WITHOUT SALT &#183; SHA-256(password)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Era.Faint}" Margin="0,0,0,12"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <controls:FloppyDisk PersonName="alice" SaltText="no salt" HashText="{Binding SaltingHashUnsalted}"
+                                                                  BodyBrush="#3A3D42" LabelBrush="#FBF8EE" PenBrush="#1D3F75" Margin="0,0,10,0"/>
+                                            <controls:FloppyDisk PersonName="bob" SaltText="no salt" HashText="{Binding SaltingHashUnsalted}"
+                                                                  BodyBrush="#3A3D42" LabelBrush="#FBF8EE" PenBrush="#1D3F75"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Identical disks. Crack one, you've cracked both." Foreground="{DynamicResource Era.Dialup.Leak}" FontWeight="SemiBold"
+                                                   FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="2" Padding="16" CornerRadius="10" Background="{DynamicResource Era.ActiveRow}">
+                                    <StackPanel>
+                                        <TextBlock Text="WITH SALT &#183; SHA-256(salt + password)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Era.AccentText}" Margin="0,0,0,12"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <controls:FloppyDisk PersonName="alice" SaltText="{Binding SaltingSaltAHex, StringFormat='salt {0}'}" HashText="{Binding SaltingHashA}"
+                                                                  BodyBrush="#2F6FB5" LabelBrush="#FBF8EE" PenBrush="#1D3F75" Margin="0,0,10,0"/>
+                                            <controls:FloppyDisk PersonName="bob" SaltText="{Binding SaltingSaltBHex, StringFormat='salt {0}'}" HashText="{Binding SaltingHashB}"
+                                                                  BodyBrush="#E2A31F" LabelBrush="#FBF8EE" PenBrush="#1D3F75"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Different disks, same password. Each one has to be cracked separately." Foreground="{DynamicResource Era.AccentText}" FontWeight="SemiBold"
+                                                   FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+
                         <!-- ============ Lesson 11: ECB/CBC punch cards ============ -->
                         <StackPanel Visibility="{Binding IsEcbCbcLesson, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,4,0,24">
                             <Border Height="10" CornerRadius="2" Margin="0,0,0,16">

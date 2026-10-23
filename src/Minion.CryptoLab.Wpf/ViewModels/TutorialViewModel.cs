@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Security.Cryptography;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Minion.CryptoLab.Core.Crypto;
 using Minion.CryptoLab.Core.Models;
 using Minion.CryptoLab.Core.Tutorial;
 using Minion.CryptoLab.Wpf.Services;
@@ -167,7 +169,7 @@ public partial class TutorialViewModel : ObservableObject
     public bool HasDemo => CurrentStep.Demo != null;
 
     /// <summary>The generic Card demo, hidden for the one lesson with a bespoke visual instead.</summary>
-    public bool ShowGenericCipherDemo => HasDemo && !IsCaesarLesson;
+    public bool ShowGenericCipherDemo => HasDemo && !IsCaesarLesson && !IsSaltingLesson;
     public bool HasFrequency => CurrentStep.Frequency != null;
     public bool HasBlockPattern => CurrentStep.BlockPattern != null;
 
@@ -198,6 +200,29 @@ public partial class TutorialViewModel : ObservableObject
     public ObservableCollection<PunchCard> EcbCards { get; } = new();
     public ObservableCollection<PunchCard> CbcCards { get; } = new();
     public int EcbRepeatCount => EcbCards.Count(c => c.RepeatOfBlock != null);
+
+    /// <summary>True only for the one lesson with the bespoke floppy-disk visual (Lesson 14).
+    /// Unlike the generic demos, salts are real state — not recomputed on every read — so two
+    /// independent bindings (e.g. the label and a tooltip) can't disagree or flicker.</summary>
+    public bool IsSaltingLesson => !IsDivider && CurrentStep.Number == "14";
+
+    [ObservableProperty] private string saltingSaltAHex = "";
+    [ObservableProperty] private string saltingSaltBHex = "";
+    public string SaltingHashUnsalted => Truncate(ModernCrypto.Sha256Hex(DemoInput));
+    public string SaltingHashA => Truncate(ModernCrypto.Sha256Hex(SaltingSaltAHex + DemoInput));
+    public string SaltingHashB => Truncate(ModernCrypto.Sha256Hex(SaltingSaltBHex + DemoInput));
+
+    private static string Truncate(string hex) => hex.Length <= 28 ? hex : hex[..28] + "…";
+
+    [RelayCommand]
+    private void NewSalts()
+    {
+        SaltingSaltAHex = Convert.ToHexString(RandomNumberGenerator.GetBytes(8)).ToLowerInvariant();
+        SaltingSaltBHex = Convert.ToHexString(RandomNumberGenerator.GetBytes(8)).ToLowerInvariant();
+        OnPropertyChanged(nameof(SaltingHashUnsalted));
+        OnPropertyChanged(nameof(SaltingHashA));
+        OnPropertyChanged(nameof(SaltingHashB));
+    }
 
     partial void OnNavIndexChanged(int value) => LoadNavState();
 
@@ -281,6 +306,9 @@ public partial class TutorialViewModel : ObservableObject
                 CaesarMapping.Add(new CaesarMappingEntry(plain, cipher, used.Contains(plain)));
             }
         }
+
+        OnPropertyChanged(nameof(IsSaltingLesson));
+        if (IsSaltingLesson) NewSalts();
     }
 
     /// <summary>True only for the one lesson with the bespoke millstone-wheel visual (Lesson 02).</summary>
