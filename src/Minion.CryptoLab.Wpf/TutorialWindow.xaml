@@ -3,201 +3,310 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:vm="clr-namespace:Minion.CryptoLab.Wpf.ViewModels"
+        xmlns:conv="clr-namespace:Minion.CryptoLab.Wpf.Converters"
+        xmlns:controls="clr-namespace:Minion.CryptoLab.Wpf.Controls"
         mc:Ignorable="d"
-        Style="{StaticResource BaseWindowStyle}"
-        Title="Learning Cryptography" Height="860" Width="1140" MinHeight="620" MinWidth="820"
-        WindowStartupLocation="CenterOwner" WindowStyle="SingleBorderWindow" ResizeMode="CanResize">
+        Title="CryptoLab" Height="860" Width="1140" MinHeight="620" MinWidth="900"
+        WindowStartupLocation="CenterOwner" WindowStyle="SingleBorderWindow" ResizeMode="CanResize"
+        Background="{DynamicResource Era.Background}">
+    <Window.Resources>
+        <conv:UpperCaseConverter x:Key="UpperCaseConverter"/>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
+        <!-- One sidebar row: header (expanded with lessons following, or collapsed with a lesson
+             count) or a lesson row, already resolved by the ViewModel into SidebarRowVm. -->
+        <DataTemplate DataType="{x:Type vm:SidebarRowVm}">
+            <Button Command="{Binding DataContext.JumpToLessonCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding JumpStepIndex}" Cursor="Hand" Focusable="False"
+                    AutomationProperties.Name="{Binding Title}">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Row" Padding="22,7" Background="Transparent" BorderThickness="2,0,0,0" BorderBrush="Transparent">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="LabelText" Grid.Column="0" Text="{Binding Label}" VerticalAlignment="Top"
+                                           FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="12" Foreground="{DynamicResource Era.Faint}"/>
+                                <TextBlock x:Name="TitleText" Grid.Column="1" Text="{Binding Title}" TextWrapping="Wrap"
+                                           FontFamily="./Resources/Fonts/#IBM Plex Sans" FontSize="13" Foreground="{DynamicResource Era.Muted}"/>
+                                <TextBlock x:Name="CountText" Grid.Column="2" Text="{Binding LessonCount}" VerticalAlignment="Top"
+                                           FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="11" Foreground="{DynamicResource Era.Faint}"
+                                           Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Part / wrap-up header: small caps label, title uppercase and bold-ish. -->
+                            <DataTrigger Binding="{Binding IsHeader}" Value="True">
+                                <Setter TargetName="LabelText" Property="FontSize" Value="11"/>
+                                <Setter TargetName="LabelText" Property="FontFamily" Value="./Resources/Fonts/#IBM Plex Sans"/>
+                                <Setter TargetName="LabelText" Property="FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="TitleText" Property="FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="TitleText" Property="FontSize" Value="12"/>
+                                <Setter TargetName="TitleText" Property="Text" Value="{Binding Title, Converter={StaticResource UpperCaseConverter}}"/>
+                                <Setter TargetName="Row" Property="Padding" Value="22,10,22,6"/>
+                            </DataTrigger>
+                            <!-- Current (expanded) part header: accent colour, no border-top. -->
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsHeader}" Value="True"/>
+                                    <Condition Binding="{Binding IsCurrentPartHeader}" Value="True"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="LabelText" Property="Foreground" Value="{DynamicResource Era.AccentText}"/>
+                                <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource Era.AccentText}"/>
+                            </MultiDataTrigger>
+                            <!-- Collapsed (other) part header: faint, top divider, lesson count shown. -->
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsHeader}" Value="True"/>
+                                    <Condition Binding="{Binding IsCurrentPartHeader}" Value="False"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="Row" Property="BorderThickness" Value="0,1,0,0"/>
+                                <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource Era.Line}"/>
+                                <Setter TargetName="LabelText" Property="Foreground" Value="{DynamicResource Era.Faint}"/>
+                                <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource Era.Faint}"/>
+                                <Setter TargetName="CountText" Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                            <!-- Active lesson (or active wrap-up row): accent left bar + tinted background. -->
+                            <DataTrigger Binding="{Binding IsActiveLesson}" Value="True">
+                                <Setter TargetName="Row" Property="Background" Value="{DynamicResource Era.ActiveRow}"/>
+                                <Setter TargetName="Row" Property="BorderBrush" Value="{DynamicResource Era.Accent}"/>
+                                <Setter TargetName="LabelText" Property="Foreground" Value="{DynamicResource Era.AccentText}"/>
+                                <Setter TargetName="TitleText" Property="Foreground" Value="{DynamicResource Era.Ink}"/>
+                                <Setter TargetName="TitleText" Property="FontWeight" Value="SemiBold"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </DataTemplate>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ================= LEFT NAV ================= -->
-        <Border Grid.Column="0" Background="{DynamicResource Brush.Bg1}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0">
+        <!-- ================= SIDEBAR ================= -->
+        <Border Grid.Column="0" Background="{DynamicResource Era.SidebarBrush}" BorderBrush="{DynamicResource Era.Line}" BorderThickness="0,0,1,0">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Top" Text="Lessons" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="16,20,16,8"/>
-                <ListBox DockPanel.Dock="Top" ItemsSource="{Binding StepTitles}" SelectedIndex="{Binding StepIndex, Mode=TwoWay}"
-                         Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         ItemContainerStyle="{StaticResource AttackListItem}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="22,22,22,18">
+                    <Image Source="{DynamicResource Era.Icon}" Width="36" Height="36" Stretch="Uniform"/>
+                    <TextBlock Text="CryptoLab" Style="{StaticResource Frame.SidebarLogo}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                </StackPanel>
+                <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding SidebarRows}"/>
+                </ScrollViewer>
             </DockPanel>
         </Border>
 
         <!-- ================= MAIN ================= -->
         <Grid Grid.Column="1">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="56"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="68"/>
+            </Grid.RowDefinitions>
 
-        <!-- ================= HEADER ================= -->
-        <StackPanel Grid.Row="0" Margin="32,24,32,10">
-            <TextBlock Text="Learning Cryptography — from decoder rings to key exchange" Style="{StaticResource Text.H1}" FontSize="18"/>
-            <TextBlock Style="{StaticResource Text.Muted}" Margin="0,4,0,0">
-                <Run Text="Step "/><Run Text="{Binding StepNumber, Mode=OneWay}"/><Run Text=" of "/><Run Text="{Binding StepCount, Mode=OneWay}"/>
-            </TextBlock>
-        </StackPanel>
+            <!-- ================= HEADER ================= -->
+            <Border Grid.Row="0" BorderBrush="{DynamicResource Era.Line}" BorderThickness="0,0,0,1">
+                <Grid Margin="36,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Style="{StaticResource Frame.HeaderPartLabel}"
+                               Text="{Binding CurrentPartInfo.Title, FallbackValue='', Converter={StaticResource UpperCaseConverter}}"/>
+                    <controls:CourseProgressBar Grid.Column="1" Margin="20,0" MaxWidth="520"
+                                                 LessonIndex="{Binding CurrentStepIndex}"
+                                                 LessonCount="{Binding StepCount}"/>
+                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource Frame.HeaderStepLabel}"
+                               Text="{Binding LessonPosition, StringFormat='Step {0} of 26'}"/>
+                </Grid>
+            </Border>
 
-        <!-- ================= CONTENT ================= -->
-        <ScrollViewer Grid.Row="1" Margin="32,0,32,0" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <TextBlock Text="{Binding CurrentStep.Title, Mode=OneWay}" Style="{StaticResource Text.H2}" FontSize="19" Margin="0,0,0,12"/>
+            <!-- ================= CONTENT ================= -->
+            <Grid Grid.Row="1">
+                <!-- Divider screen: shown instead of lesson content while IsDivider is true.
+                     TODO (plan step 4): replace this placeholder with the real two-column divider
+                     (copy + mascot + era-styled lesson list) once the sample-lesson controls exist. -->
+                <StackPanel Visibility="{Binding IsDivider, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Margin="40,30,40,0">
+                    <TextBlock Text="{Binding CurrentPartInfo.Title, Converter={StaticResource UpperCaseConverter}}"
+                               FontFamily="./Resources/Fonts/#IBM Plex Sans" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{DynamicResource Era.AccentText}"/>
+                    <TextBlock Text="{Binding CurrentPartInfo.Title}" FontFamily="{DynamicResource Era.DisplayFont}"
+                               FontWeight="Bold" FontSize="48" Foreground="{DynamicResource Era.Ink}" Margin="0,8,0,16"/>
+                    <TextBlock Text="{Binding CurrentPartInfo.Intro}" TextWrapping="Wrap" FontSize="16" MaxWidth="560"
+                               FontFamily="./Resources/Fonts/#IBM Plex Sans" Foreground="{DynamicResource Era.Muted}"/>
+                </StackPanel>
 
-                <ItemsControl ItemsSource="{Binding CurrentStep.Paragraphs, Mode=OneWay}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Mode=OneTime, Converter={StaticResource HeadingDisplayTextConverter}}"
-                                       Margin="0,0,0,12"
-                                       FontFamily="{Binding Mode=OneTime, Converter={StaticResource MultilineToFontConverter}}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
-                                        <Style.Triggers>
-                                            <DataTrigger Value="True">
-                                                <DataTrigger.Binding>
-                                                    <Binding Mode="OneTime" Converter="{StaticResource IsHeadingConverter}"/>
-                                                </DataTrigger.Binding>
-                                                <Setter Property="FontSize" Value="16"/>
-                                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                                <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
-                                                <Setter Property="Margin" Value="0,18,0,8"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <!-- ============ Cipher text-demo ============ -->
-                <Border Style="{StaticResource Card}" Margin="0,4,0,24"
-                        Visibility="{Binding HasDemo, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ScrollViewer Margin="40,30,40,0" VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding IsDivider, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
                     <StackPanel>
-                        <TextBlock Text="🧪 Try it yourself" Style="{StaticResource Text.H2}"/>
-                        <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Style="{StaticResource Text.Muted}" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBox.Field}" FontFamily="{StaticResource Font.Code}"/>
+                        <TextBlock Text="{Binding CurrentStep.Title, Mode=OneWay}" FontFamily="./Resources/Fonts/#IBM Plex Sans"
+                                   FontWeight="SemiBold" FontSize="20" Foreground="{DynamicResource Era.Ink}" Margin="0,0,0,12"/>
 
-                        <StackPanel Visibility="{Binding HasDemoKey, Converter={StaticResource BoolToVisibilityConverter}}">
-                            <TextBlock Text="{Binding DemoKeyLabel, Mode=OneWay}" Style="{StaticResource Text.Muted}" Margin="0,10,0,4"/>
-                            <TextBox Text="{Binding DemoKey, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBox.Field}" FontFamily="{StaticResource Font.Code}"/>
-                        </StackPanel>
-
-                        <TextBlock Text="Result" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="0,14,0,4"/>
-                        <Border Style="{StaticResource CodeBlock}">
-                            <TextBox Text="{Binding DemoOutput, Mode=OneWay}" Style="{StaticResource TextBox.Selectable}"
-                                     FontFamily="{StaticResource Font.Code}" FontSize="13" TextWrapping="Wrap"
-                                     Foreground="{DynamicResource Brush.CodeText}" AcceptsReturn="True"/>
-                        </Border>
-
-                        <TextBlock Text="{Binding DemoExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12" FontFamily="{Binding DemoExplain, Mode=OneWay, Converter={StaticResource MultilineToFontConverter}}"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- ============ Frequency chart demo ============ -->
-                <Border Style="{StaticResource Card}" Margin="0,4,0,24"
-                        Visibility="{Binding HasFrequency, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <StackPanel>
-                        <TextBlock Text="🧪 Try it yourself" Style="{StaticResource Text.H2}"/>
-                        <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Style="{StaticResource Text.Muted}" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBox.Field}"
-                                 FontFamily="{StaticResource Font.Code}" AcceptsReturn="True" Height="48" TextWrapping="Wrap"/>
-
-                        <TextBlock Text="Letter frequency" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="0,14,0,8"/>
-                        <ItemsControl ItemsSource="{Binding FrequencyBars}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                        <ItemsControl ItemsSource="{Binding CurrentStep.Paragraphs, Mode=OneWay}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Margin="0,1,0,1">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="20"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="30"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Letter}" FontFamily="{StaticResource Font.Code}" FontSize="11" VerticalAlignment="Center"/>
-                                        <Border Grid.Column="1" Height="10" HorizontalAlignment="Left" CornerRadius="2"
-                                                Background="{DynamicResource Brush.Accent}"
-                                                Width="{Binding Fraction, Converter={StaticResource FractionToWidthConverter}}"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding Count}" FontSize="11" Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center"/>
-                                    </Grid>
+                                    <TextBlock Text="{Binding Mode=OneTime, Converter={StaticResource HeadingDisplayTextConverter}}"
+                                               TextWrapping="Wrap" Margin="0,0,0,12" FontSize="14"
+                                               FontFamily="{Binding Mode=OneTime, Converter={StaticResource MultilineToFontConverter}}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource Era.Muted}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <Binding Mode="OneTime" Converter="{StaticResource IsHeadingConverter}"/>
+                                                        </DataTrigger.Binding>
+                                                        <Setter Property="FontSize" Value="16"/>
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource Era.AccentText}"/>
+                                                        <Setter Property="Margin" Value="0,18,0,8"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <TextBlock Text="{Binding FrequencyExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12" FontFamily="{Binding FrequencyExplain, Mode=OneWay, Converter={StaticResource MultilineToFontConverter}}"/>
-                    </StackPanel>
-                </Border>
+                        <!-- ============ Cipher text-demo ============ -->
+                        <Border Margin="0,4,0,24" Padding="18" CornerRadius="10" Background="{DynamicResource Era.ActiveRow}"
+                                Visibility="{Binding HasDemo, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Try it yourself" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource Era.Ink}"/>
+                                <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Foreground="{DynamicResource Era.Muted}" Margin="0,8,0,4"/>
+                                <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" FontFamily="./Resources/Fonts/#IBM Plex Mono"
+                                         Padding="10,8" Background="{DynamicResource Era.Background}" Foreground="{DynamicResource Era.Ink}" BorderThickness="1"
+                                         BorderBrush="{DynamicResource Era.Line}"/>
 
-                <!-- ============ Block-pattern (ECB vs CBC) demo ============ -->
-                <Border Style="{StaticResource Card}" Margin="0,4,0,24"
-                        Visibility="{Binding HasBlockPattern, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <StackPanel>
-                        <TextBlock Text="🧪 Try it yourself" Style="{StaticResource Text.H2}"/>
-                        <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Style="{StaticResource Text.Muted}" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TextBox.Field}" FontFamily="{StaticResource Font.Code}"/>
+                                <StackPanel Visibility="{Binding HasDemoKey, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Text="{Binding DemoKeyLabel, Mode=OneWay}" Foreground="{DynamicResource Era.Muted}" Margin="0,10,0,4"/>
+                                    <TextBox Text="{Binding DemoKey, UpdateSourceTrigger=PropertyChanged}" FontFamily="./Resources/Fonts/#IBM Plex Mono"
+                                             Padding="10,8" Background="{DynamicResource Era.Background}" Foreground="{DynamicResource Era.Ink}" BorderThickness="1"
+                                             BorderBrush="{DynamicResource Era.Line}"/>
+                                </StackPanel>
 
-                        <Grid Margin="0,14,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="14"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="ECB — each block independent" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <ItemsControl ItemsSource="{Binding EcbBlocks}">
+                                <TextBlock Text="Result" Foreground="{DynamicResource Era.Muted}" FontWeight="Bold" Margin="0,14,0,4"/>
+                                <Border Background="{DynamicResource Era.Background}" BorderBrush="{DynamicResource Era.Line}" BorderThickness="1" CornerRadius="6" Padding="10">
+                                    <TextBox Text="{Binding DemoOutput, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                                             FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="13" TextWrapping="Wrap"
+                                             Foreground="{DynamicResource Era.Accent}" AcceptsReturn="True"/>
+                                </Border>
+
+                                <TextBlock Text="{Binding DemoExplain, Mode=OneWay}" Margin="0,12,0,0" TextWrapping="Wrap" FontSize="12"
+                                           Foreground="{DynamicResource Era.Muted}" FontFamily="./Resources/Fonts/#IBM Plex Sans"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ============ Frequency chart demo ============ -->
+                        <Border Margin="0,4,0,24" Padding="18" CornerRadius="10" Background="{DynamicResource Era.ActiveRow}"
+                                Visibility="{Binding HasFrequency, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Try it yourself" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource Era.Ink}"/>
+                                <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Foreground="{DynamicResource Era.Muted}" Margin="0,8,0,4"/>
+                                <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" FontFamily="./Resources/Fonts/#IBM Plex Mono"
+                                         Padding="10,8" Background="{DynamicResource Era.Background}" Foreground="{DynamicResource Era.Ink}" BorderThickness="1"
+                                         BorderBrush="{DynamicResource Era.Line}" AcceptsReturn="True" Height="48" TextWrapping="Wrap"/>
+
+                                <TextBlock Text="Letter frequency" Foreground="{DynamicResource Era.Muted}" FontWeight="Bold" Margin="0,14,0,8"/>
+                                <ItemsControl ItemsSource="{Binding FrequencyBars}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Style="{StaticResource CodeBlock}" Margin="0,0,0,4" Padding="8,5">
-                                                <TextBlock Text="{Binding}" FontFamily="{StaticResource Font.Code}" FontSize="11" Foreground="{DynamicResource Brush.CodeText}" TextWrapping="Wrap"/>
-                                            </Border>
+                                            <Grid Margin="0,1,0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="20"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="30"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding Letter}" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource Era.Ink}"/>
+                                                <Border Grid.Column="1" Height="10" HorizontalAlignment="Left" CornerRadius="2"
+                                                        Background="{DynamicResource Era.Accent}" Width="{Binding Fraction, Converter={StaticResource FractionToWidthConverter}}"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Count}" FontSize="11" Foreground="{DynamicResource Era.Muted}" VerticalAlignment="Center"/>
+                                            </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="CBC — chained to the block before it" Style="{StaticResource Text.Muted}" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <ItemsControl ItemsSource="{Binding CbcBlocks}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Style="{StaticResource CodeBlock}" Margin="0,0,0,4" Padding="8,5">
-                                                <TextBlock Text="{Binding}" FontFamily="{StaticResource Font.Code}" FontSize="11" Foreground="{DynamicResource Brush.CodeText}" TextWrapping="Wrap"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Grid>
 
-                        <TextBlock Text="{Binding BlockPatternExplain, Mode=OneWay}" Margin="0,12,0,0" Style="{StaticResource Text.Body}" FontSize="12" FontFamily="{Binding BlockPatternExplain, Mode=OneWay, Converter={StaticResource MultilineToFontConverter}}"/>
+                                <TextBlock Text="{Binding FrequencyExplain, Mode=OneWay}" Margin="0,12,0,0" TextWrapping="Wrap" FontSize="12"
+                                           Foreground="{DynamicResource Era.Muted}" FontFamily="./Resources/Fonts/#IBM Plex Sans"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ============ Block-pattern (ECB vs CBC) demo ============ -->
+                        <Border Margin="0,4,0,24" Padding="18" CornerRadius="10" Background="{DynamicResource Era.ActiveRow}"
+                                Visibility="{Binding HasBlockPattern, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Try it yourself" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource Era.Ink}"/>
+                                <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Foreground="{DynamicResource Era.Muted}" Margin="0,8,0,4"/>
+                                <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" FontFamily="./Resources/Fonts/#IBM Plex Mono"
+                                         Padding="10,8" Background="{DynamicResource Era.Background}" Foreground="{DynamicResource Era.Ink}" BorderThickness="1"
+                                         BorderBrush="{DynamicResource Era.Line}"/>
+
+                                <Grid Margin="0,14,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="14"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="ECB — each block independent" Foreground="{DynamicResource Era.Muted}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <ItemsControl ItemsSource="{Binding EcbBlocks}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{DynamicResource Era.Background}" BorderBrush="{DynamicResource Era.Line}" BorderThickness="1" CornerRadius="4" Margin="0,0,0,4" Padding="8,5">
+                                                        <TextBlock Text="{Binding}" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="11" Foreground="{DynamicResource Era.Accent}" TextWrapping="Wrap"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="CBC — chained to the block before it" Foreground="{DynamicResource Era.Muted}" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <ItemsControl ItemsSource="{Binding CbcBlocks}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{DynamicResource Era.Background}" BorderBrush="{DynamicResource Era.Line}" BorderThickness="1" CornerRadius="4" Margin="0,0,0,4" Padding="8,5">
+                                                        <TextBlock Text="{Binding}" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="11" Foreground="{DynamicResource Era.Accent}" TextWrapping="Wrap"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="{Binding BlockPatternExplain, Mode=OneWay}" Margin="0,12,0,0" TextWrapping="Wrap" FontSize="12"
+                                           Foreground="{DynamicResource Era.Muted}" FontFamily="./Resources/Fonts/#IBM Plex Sans"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+                </ScrollViewer>
+            </Grid>
 
-        <!-- ================= FOOTER ================= -->
-        <Grid Grid.Row="2" Margin="32,10,32,22">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <Button Grid.Column="0" Content="Skip tutorial" Style="{StaticResource Button.Ghost}" Command="{Binding CloseCommand}"/>
-
-            <Button Grid.Column="2" Content="← Back" Style="{StaticResource Button.Ghost}" Margin="0,0,10,0"
-                    Command="{Binding BackCommand}" IsEnabled="{Binding CanGoBack}"/>
-            <Button Grid.Column="3" Content="{Binding NextButtonLabel, Mode=OneWay}" Style="{StaticResource Button.Primary}"
-                    Padding="18,8" Command="{Binding NextCommand}"/>
-        </Grid>
+            <!-- ================= FOOTER ================= -->
+            <Grid Grid.Row="2" Margin="36,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="1" Content="{Binding BackButtonLabel}" Style="{StaticResource Frame.Button.Secondary}"
+                        Margin="0,0,10,0" Command="{Binding BackCommand}" IsEnabled="{Binding CanGoBack}"/>
+                <Button Grid.Column="2" Content="{Binding NextButtonLabel, Mode=OneWay}" Style="{StaticResource Frame.Button.Primary}"
+                        Command="{Binding NextCommand}"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

@@ -46,6 +46,7 @@ public static class TutorialContent
 
     private static TutorialStep Step01Intro() => new()
     {
+        Part = Part.I, Number = "01",
         Title = "What is a cipher, really?",
         Paragraphs = new[]
         {
@@ -67,6 +68,7 @@ public static class TutorialContent
 
     private static TutorialStep Step02Caesar() => new()
     {
+        Part = Part.I, Number = "02",
         Title = "The decoder ring: the Caesar cipher",
         Paragraphs = new[]
         {
@@ -119,6 +121,7 @@ public static class TutorialContent
 
     private static TutorialStep Step03Rot13Atbash() => new()
     {
+        Part = Part.I, Number = "03",
         Title = "Two famous special cases",
         Paragraphs = new[]
         {
@@ -175,6 +178,7 @@ public static class TutorialContent
 
     private static TutorialStep Step04SimpleSubstitution() => new()
     {
+        Part = Part.I, Number = "04",
         Title = "A much bigger keyspace: simple substitution",
         Paragraphs = new[]
         {
@@ -233,6 +237,7 @@ public static class TutorialContent
 
     private static TutorialStep Step05FrequencyAnalysis() => new()
     {
+        Part = Part.I, Number = "05",
         Title = "The attack that doesn't care about keyspace: frequency analysis",
         Paragraphs = new[]
         {
@@ -292,6 +297,7 @@ public static class TutorialContent
 
     private static TutorialStep Step06Vigenere() => new()
     {
+        Part = Part.I, Number = "06",
         Title = "Fixing the frequency leak (sort of): the Vigenère cipher",
         Paragraphs = new[]
         {
@@ -393,6 +399,7 @@ public static class TutorialContent
 
     private static TutorialStep Step07Kasiski() => new()
     {
+        Part = Part.I, Number = "07",
         Title = "...but the key still repeats: Kasiski examination",
         Paragraphs = new[]
         {
@@ -458,6 +465,7 @@ public static class TutorialContent
 
     private static TutorialStep Step08XorAndOtp() => new()
     {
+        Part = Part.II, Number = "08",
         Title = "The bit-level version: XOR and the one-time pad",
         Paragraphs = new[]
         {
@@ -589,6 +597,7 @@ public static class TutorialContent
 
     private static TutorialStep Step09TwoTimePad() => new()
     {
+        Part = Part.II, Number = "09",
         Title = "Break rule #3 once and it all falls apart: the two-time pad",
         Paragraphs = new[]
         {
@@ -659,6 +668,7 @@ public static class TutorialContent
 
     private static TutorialStep Step10BlockVsStream() => new()
     {
+        Part = Part.II, Number = "10",
         Title = "Modern ciphers: block vs. stream, and meet AES",
         Paragraphs = new[]
         {
@@ -715,6 +725,7 @@ public static class TutorialContent
 
     private static TutorialStep Step11EcbVsCbc() => new()
     {
+        Part = Part.II, Number = "11",
         Title = "Modes of operation: ECB vs. CBC",
         Paragraphs = new[]
         {
@@ -832,6 +843,7 @@ public static class TutorialContent
 
     private static TutorialStep Step12AuthenticatedEncryption() => new()
     {
+        Part = Part.II, Number = "12",
         Title = "CBC still isn't the whole story: authenticated encryption",
         Paragraphs = new[]
         {
@@ -896,6 +908,7 @@ public static class TutorialContent
 
     private static TutorialStep Step12bChaCha20Poly1305() => new()
     {
+        Part = Part.II, Number = "12b",
         Title = "The other modern cipher: ChaCha20-Poly1305",
         Paragraphs = new[]
         {
@@ -954,6 +967,7 @@ public static class TutorialContent
 
     private static TutorialStep Step13HashingVsEncryption() => new()
     {
+        Part = Part.III, Number = "13",
         Title = "A completely different tool: hashing",
         Paragraphs = new[]
         {
@@ -998,6 +1012,7 @@ public static class TutorialContent
 
     private static TutorialStep Step13bBrokenHashes() => new()
     {
+        Part = Part.III, Number = "13b",
         Title = "When \"a hash\" isn't enough: MD5 and SHA-1 are broken",
         Paragraphs = new[]
         {
@@ -1083,6 +1098,7 @@ public static class TutorialContent
 
     private static TutorialStep Step14Salting() => new()
     {
+        Part = Part.III, Number = "14",
         Title = "Hashing passwords safely, part 1: salting",
         Paragraphs = new[]
         {
@@ -1126,6 +1142,7 @@ public static class TutorialContent
 
     private static TutorialStep Step14bPepper() => new()
     {
+        Part = Part.III, Number = "14b",
         Title = "A second secret, kept somewhere else entirely: pepper",
         Paragraphs = new[]
         {
@@ -1182,6 +1199,7 @@ public static class TutorialContent
 
     private static TutorialStep Step15SlowKdf() => new()
     {
+        Part = Part.III, Number = "15",
         Title = "Hashing passwords safely, part 2: slow, on purpose",
         Paragraphs = new[]
         {
@@ -1233,6 +1251,7 @@ public static class TutorialContent
 
     private static TutorialStep Step16Hmac() => new()
     {
+        Part = Part.III, Number = "16",
         Title = "Proving a message wasn't tampered with: HMAC",
         Paragraphs = new[]
         {
@@ -1301,6 +1320,7 @@ public static class TutorialContent
 
     private static TutorialStep Step17PaddingOracle() => new()
     {
+        Part = Part.III, Number = "17",
         Title = "When two half-fixes combine into a real exploit: the padding oracle",
         Paragraphs = new[]
         {
@@ -1435,6 +1455,7 @@ public static class TutorialContent
 
     private static TutorialStep Step18KeyExchange() => new()
     {
+        Part = Part.IV, Number = "18",
         Title = "The problem symmetric crypto can't solve by itself: key exchange",
         Paragraphs = new[]
         {
@@ -1536,6 +1557,7 @@ public static class TutorialContent
 
     private static TutorialStep Step18bPublicPrivateKeys() => new()
     {
+        Part = Part.IV, Number = "18b",
         Title = "A key that can't undo its own lock: public and private keys",
         Paragraphs = new[]
         {
@@ -1708,6 +1730,7 @@ public static class TutorialContent
 
     private static TutorialStep Step18cDigitalSignatures() => new()
     {
+        Part = Part.IV, Number = "18c",
         Title = "Running the padlock backward: digital signatures",
         Paragraphs = new[]
         {
@@ -1794,6 +1817,7 @@ public static class TutorialContent
 
     private static TutorialStep Step18dCertificatesAndPki() => new()
     {
+        Part = Part.IV, Number = "18d",
         Title = "A notarized ID card for a public key: certificates",
         Paragraphs = new[]
         {
@@ -1875,6 +1899,7 @@ public static class TutorialContent
 
     private static TutorialStep Step19Randomness() => new()
     {
+        Part = Part.IV, Number = "19",
         Title = "The ingredient everything above secretly depends on: randomness",
         Paragraphs = new[]
         {
@@ -1921,6 +1946,7 @@ public static class TutorialContent
 
     private static TutorialStep Step20WrapUp() => new()
     {
+        Part = Part.Hub, Number = "20",
         Title = "You're ready — go break things on purpose",
         Paragraphs = new[]
         {

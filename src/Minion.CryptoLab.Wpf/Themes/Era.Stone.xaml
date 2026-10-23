@@ -1,0 +1,34 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Part I · Hand ciphers · Antiquity (carved stone). Values from the design handoff's themes.json. -->
+
+    <SolidColorBrush x:Key="Era.Background" Color="#D6CEBD"/>
+    <SolidColorBrush x:Key="Era.SidebarBrush" Color="#C6BCA8"/>
+    <SolidColorBrush x:Key="Era.Ink" Color="#3D362C"/>
+    <SolidColorBrush x:Key="Era.Muted" Color="#5E5546"/>
+    <SolidColorBrush x:Key="Era.Faint" Color="#7F7564"/>
+    <SolidColorBrush x:Key="Era.Accent" Color="#A3402C"/>
+    <SolidColorBrush x:Key="Era.AccentText" Color="#A3402C"/>
+    <SolidColorBrush x:Key="Era.Line" Color="#2E3D362C"/>
+    <SolidColorBrush x:Key="Era.ActiveRow" Color="#1FA3402C"/>
+
+    <SolidColorBrush x:Key="Era.PrimaryButton.Bg" Color="#A3402C"/>
+    <SolidColorBrush x:Key="Era.PrimaryButton.Fg" Color="#F4E8D6"/>
+    <SolidColorBrush x:Key="Era.PrimaryButton.Shadow" Color="#6E2618"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Bg" Color="Transparent"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Fg" Color="#3D362C"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Border" Color="#593D362C"/>
+
+    <FontFamily x:Key="Era.DisplayFont">./Resources/Fonts/#Cinzel</FontFamily>
+    <FontFamily x:Key="Era.BodyFont">./Resources/Fonts/#EB Garamond</FontFamily>
+    <FontFamily x:Key="Era.DataFont">./Resources/Fonts/#IBM Plex Mono</FontFamily>
+
+    <BitmapImage x:Key="Era.Mascot" UriSource="pack://application:,,,/Resources/Mascots/minion-caesar.png"/>
+    <BitmapImage x:Key="Era.Icon" UriSource="pack://application:,,,/Resources/Mascots/minion-caesar-icon.png"/>
+
+    <!-- Caesar-wheel / carved-text extras, used only by the Part I sample lesson and divider. -->
+    <SolidColorBrush x:Key="Era.Stone.CarvedText" Color="#6B6152"/>
+    <SolidColorBrush x:Key="Era.Stone.InscriptionText" Color="#A3402C"/>
+
+</ResourceDictionary>

@@ -9,6 +9,7 @@
                 <ResourceDictionary Source="Themes/Colors.Dark.xaml"/>
                 <ResourceDictionary Source="Themes/Brushes.xaml"/>
                 <ResourceDictionary Source="Themes/Styles.xaml"/>
+                <ResourceDictionary Source="Themes/Frame.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>

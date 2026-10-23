@@ -1,0 +1,33 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Part IV · Keys & trust · The Network Age (blueprint / engineering drawing). Values from themes.json. -->
+
+    <SolidColorBrush x:Key="Era.Background" Color="#08336C"/>
+    <SolidColorBrush x:Key="Era.SidebarBrush" Color="#012A63"/>
+    <SolidColorBrush x:Key="Era.Ink" Color="#E8EEFC"/>
+    <SolidColorBrush x:Key="Era.Muted" Color="#B4C3EA"/>
+    <SolidColorBrush x:Key="Era.Faint" Color="#7690CF"/>
+    <SolidColorBrush x:Key="Era.Accent" Color="#FFD27A"/>
+    <SolidColorBrush x:Key="Era.AccentText" Color="#FFD27A"/>
+    <SolidColorBrush x:Key="Era.Line" Color="#38FFFFFF"/>
+    <SolidColorBrush x:Key="Era.ActiveRow" Color="#1AFFFFFF"/>
+
+    <SolidColorBrush x:Key="Era.PrimaryButton.Bg" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Era.PrimaryButton.Fg" Color="#012A63"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Bg" Color="Transparent"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Fg" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Border" Color="#8CFFFFFF"/>
+
+    <FontFamily x:Key="Era.DisplayFont">./Resources/Fonts/#Space Mono</FontFamily>
+    <FontFamily x:Key="Era.BodyFont">./Resources/Fonts/#IBM Plex Sans</FontFamily>
+    <FontFamily x:Key="Era.DataFont">./Resources/Fonts/#Space Mono</FontFamily>
+
+    <BitmapImage x:Key="Era.Mascot" UriSource="pack://application:,,,/Resources/Mascots/minion-network-v4.png"/>
+    <BitmapImage x:Key="Era.Icon" UriSource="pack://application:,,,/Resources/Mascots/minion-network-v4.png"/>
+
+    <!-- Blueprint-grid extras, used only by the Part IV sample lesson and divider. -->
+    <SolidColorBrush x:Key="Era.Network.GridLineMajor" Color="#12FFFFFF"/>
+    <SolidColorBrush x:Key="Era.Network.GridLineMinor" Color="#08FFFFFF"/>
+
+</ResourceDictionary>

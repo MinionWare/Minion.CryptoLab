@@ -11,6 +11,29 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
 
+  <!-- Four Eras redesign fonts (Google Fonts, OFL) -->
+  <ItemGroup>
+    <Resource Include="Resources\Fonts\IBMPlexSans.ttf" />
+    <Resource Include="Resources\Fonts\IBMPlexMono-Medium.ttf" />
+    <Resource Include="Resources\Fonts\IBMPlexMono-SemiBold.ttf" />
+    <Resource Include="Resources\Fonts\Cinzel.ttf" />
+    <Resource Include="Resources\Fonts\EBGaramond.ttf" />
+    <Resource Include="Resources\Fonts\BricolageGrotesque.ttf" />
+    <Resource Include="Resources\Fonts\Caveat.ttf" />
+    <Resource Include="Resources\Fonts\SpaceMono-Regular.ttf" />
+    <Resource Include="Resources\Fonts\SpaceMono-Bold.ttf" />
+  </ItemGroup>
+
+  <!-- Four Eras redesign mascots (user-supplied art, see design handoff README) -->
+  <ItemGroup>
+    <Resource Include="Resources\Mascots\minion-caesar.png" />
+    <Resource Include="Resources\Mascots\minion-caesar-icon.png" />
+    <Resource Include="Resources\Mascots\minion-raw-bits.png" />
+    <Resource Include="Resources\Mascots\minion-90s-board.png" />
+    <Resource Include="Resources\Mascots\minion-network-v4.png" />
+    <Resource Include="Resources\Mascots\minion-90s-paint.png" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>

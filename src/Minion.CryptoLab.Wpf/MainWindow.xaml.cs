@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using Minion.CryptoLab.Core.Models;
 using Minion.CryptoLab.Wpf.Services;
 using Minion.Licensing.Updates;
 
@@ -14,13 +15,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ThemeService.Apply(Part.Hub);
 
         Loaded += (_, _) => { _ = CheckForUpdatesAsync(); };
     }
 
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e) => Close();
-
-    private void ToggleThemeMenuItem_Click(object sender, RoutedEventArgs e) => ThemeService.Toggle();
 
     private void TutorialButton_Click(object sender, RoutedEventArgs e)
     {

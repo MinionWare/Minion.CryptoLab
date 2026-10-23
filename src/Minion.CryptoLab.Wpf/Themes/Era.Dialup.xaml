@@ -1,0 +1,41 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Part III · Storing secrets · The Dial-up Age (1990s beige plastic, floppy disks). Values from themes.json. -->
+
+    <SolidColorBrush x:Key="Era.Background" Color="#E6DFCC"/>
+    <SolidColorBrush x:Key="Era.SidebarBrush" Color="#DBD2BB"/>
+    <SolidColorBrush x:Key="Era.Ink" Color="#24211C"/>
+    <SolidColorBrush x:Key="Era.Muted" Color="#5A5346"/>
+    <SolidColorBrush x:Key="Era.Faint" Color="#8A8170"/>
+    <SolidColorBrush x:Key="Era.Accent" Color="#2F6FB5"/>
+    <SolidColorBrush x:Key="Era.AccentText" Color="#245A96"/>
+    <SolidColorBrush x:Key="Era.Line" Color="#2E24211C"/>
+    <SolidColorBrush x:Key="Era.ActiveRow" Color="#1F2F6FB5"/>
+
+    <SolidColorBrush x:Key="Era.PrimaryButton.Bg" Color="#2F6FB5"/>
+    <SolidColorBrush x:Key="Era.PrimaryButton.Fg" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Era.PrimaryButton.Shadow" Color="#1C4677"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Bg" Color="#EFE9D9"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Fg" Color="#24211C"/>
+    <SolidColorBrush x:Key="Era.SecondaryButton.Border" Color="#B9B09A"/>
+
+    <FontFamily x:Key="Era.DisplayFont">./Resources/Fonts/#Bricolage Grotesque</FontFamily>
+    <FontFamily x:Key="Era.DataFont">./Resources/Fonts/#IBM Plex Mono</FontFamily>
+    <FontFamily x:Key="Era.LabelFont">./Resources/Fonts/#Caveat</FontFamily>
+
+    <BitmapImage x:Key="Era.Mascot" UriSource="pack://application:,,,/Resources/Mascots/minion-90s-board.png"/>
+    <BitmapImage x:Key="Era.Icon" UriSource="pack://application:,,,/Resources/Mascots/minion-90s-board.png"/>
+
+    <!-- Floppy-disk extras, used only by the Part III sample lesson and divider. -->
+    <SolidColorBrush x:Key="Era.Dialup.FloppyLabel" Color="#FBF8EE"/>
+    <SolidColorBrush x:Key="Era.Dialup.LabelPen" Color="#1D3F75"/>
+    <SolidColorBrush x:Key="Era.Dialup.FloppyUnsaltedTop" Color="#3A3D42"/>
+    <SolidColorBrush x:Key="Era.Dialup.FloppyUnsaltedBottom" Color="#1F2124"/>
+    <SolidColorBrush x:Key="Era.Dialup.FloppySaltedATop" Color="#2F6FB5"/>
+    <SolidColorBrush x:Key="Era.Dialup.FloppySaltedABottom" Color="#1C4677"/>
+    <SolidColorBrush x:Key="Era.Dialup.FloppySaltedBTop" Color="#E2A31F"/>
+    <SolidColorBrush x:Key="Era.Dialup.FloppySaltedBBottom" Color="#A8730C"/>
+    <SolidColorBrush x:Key="Era.Dialup.Leak" Color="#B3261E"/>
+
+</ResourceDictionary>

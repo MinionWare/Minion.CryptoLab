@@ -21,9 +21,6 @@
             <MenuItem Header="_File">
                 <MenuItem Header="E_xit" Click="ExitMenuItem_Click"/>
             </MenuItem>
-            <MenuItem Header="_View">
-                <MenuItem Header="Toggle theme" Click="ToggleThemeMenuItem_Click"/>
-            </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="Show tutorial" Click="TutorialButton_Click"/>
             </MenuItem>
