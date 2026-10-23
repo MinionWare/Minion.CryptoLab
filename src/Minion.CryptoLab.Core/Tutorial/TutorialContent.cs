@@ -1534,11 +1534,8 @@ public static class TutorialContent
                 if (!int.TryParse(aSecretStr, out var aSecret) || !int.TryParse(bSecretStr, out var bSecret))
                     return "Enter whole numbers for both secrets.";
 
-                const int p = 23, g = 5; // small public prime + generator, textbook toy example
-                var aPublic = ModPow(g, aSecret, p);
-                var bPublic = ModPow(g, bSecret, p);
-                var aShared = ModPow(bPublic, aSecret, p);
-                var bShared = ModPow(aPublic, bSecret, p);
+                var (aPublic, bPublic, aShared, bShared) = DiffieHellman.Compute(aSecret, bSecret);
+                const int p = DiffieHellman.P, g = DiffieHellman.G;
 
                 return $"Public: p={p}, g={g}  (these can be shouted across the room, no secrecy needed)\n" +
                        $"Alice publishes:  g^{aSecret} mod {p} = {aPublic}\n" +
@@ -1550,16 +1547,9 @@ public static class TutorialContent
             Explain = (aSecretStr, bSecretStr) =>
             {
                 if (!int.TryParse(aSecretStr, out var aSecret)) return "Enter a whole number for Alice's secret.";
-                const int p = 23, g = 5;
-                var aPublic = ModPow(g, aSecret, p);
-
-                var tries = 0;
-                var recoveredSecret = -1;
-                for (var guess = 1; guess < p; guess++)
-                {
-                    tries++;
-                    if (ModPow(g, guess, p) == aPublic) { recoveredSecret = guess; break; }
-                }
+                const int p = DiffieHellman.P;
+                var (aPublic, _, _, _) = DiffieHellman.Compute(aSecret, 1);
+                var (recoveredSecret, tries) = DiffieHellman.BruteForce(aPublic);
 
                 var matchNote = recoveredSecret == aSecret
                     ? $"exactly Alice's real secret"
@@ -1584,19 +1574,6 @@ public static class TutorialContent
             }
         }
     };
-
-    private static long ModPow(long baseValue, long exponent, long modulus)
-    {
-        long result = 1;
-        baseValue %= modulus;
-        while (exponent > 0)
-        {
-            if ((exponent & 1) == 1) result = result * baseValue % modulus;
-            exponent >>= 1;
-            baseValue = baseValue * baseValue % modulus;
-        }
-        return result;
-    }
 
     // ---------------------------------------------------------------- 18b. Public/private keys (RSA)
 

@@ -169,7 +169,7 @@ public partial class TutorialViewModel : ObservableObject
     public bool HasDemo => CurrentStep.Demo != null;
 
     /// <summary>The generic Card demo, hidden for the one lesson with a bespoke visual instead.</summary>
-    public bool ShowGenericCipherDemo => HasDemo && !IsCaesarLesson && !IsSaltingLesson;
+    public bool ShowGenericCipherDemo => HasDemo && !IsCaesarLesson && !IsSaltingLesson && !IsDhLesson;
     public bool HasFrequency => CurrentStep.Frequency != null;
     public bool HasBlockPattern => CurrentStep.BlockPattern != null;
 
@@ -309,6 +309,60 @@ public partial class TutorialViewModel : ObservableObject
 
         OnPropertyChanged(nameof(IsSaltingLesson));
         if (IsSaltingLesson) NewSalts();
+
+        OnPropertyChanged(nameof(IsDhLesson));
+        OnPropertyChanged(nameof(DhSecretA));
+        OnPropertyChanged(nameof(DhSecretB));
+        OnPropertyChanged(nameof(DhAlicePublic));
+        OnPropertyChanged(nameof(DhBobPublic));
+        OnPropertyChanged(nameof(DhShared));
+        OnPropertyChanged(nameof(DhSharedMatches));
+        OnPropertyChanged(nameof(DhEveSecret));
+        OnPropertyChanged(nameof(DhEveTries));
+    }
+
+    /// <summary>True only for the one lesson with the bespoke Diffie-Hellman diagram (Lesson 18).</summary>
+    public bool IsDhLesson => !IsDivider && CurrentStep.Number == "18";
+
+    /// <summary>Alice/Bob's secrets, parsed from the same DemoInput/DemoKey fields the generic Card
+    /// demo uses (same reuse pattern as CaesarShift) so the -/+ buttons and a plain text field, if
+    /// one existed, couldn't disagree. Range 1-22 (p-1), matching the design's spinner bounds.</summary>
+    public int DhSecretA
+    {
+        get => int.TryParse(DemoInput, out var s) && s is >= 1 and <= 22 ? s : 6;
+        set => DemoInput = Math.Clamp(value, 1, 22).ToString();
+    }
+
+    public int DhSecretB
+    {
+        get => int.TryParse(DemoKey, out var s) && s is >= 1 and <= 22 ? s : 15;
+        set => DemoKey = Math.Clamp(value, 1, 22).ToString();
+    }
+
+    public long DhAlicePublic => DiffieHellman.Compute(DhSecretA, DhSecretB).AlicePublic;
+    public long DhBobPublic => DiffieHellman.Compute(DhSecretA, DhSecretB).BobPublic;
+    public long DhShared => DiffieHellman.Compute(DhSecretA, DhSecretB).AliceShared;
+    public bool DhSharedMatches
+    {
+        get { var (_, _, a, b) = DiffieHellman.Compute(DhSecretA, DhSecretB); return a == b; }
+    }
+    public long DhEveSecret => DiffieHellman.BruteForce(DhAlicePublic).Secret;
+    public int DhEveTries => DiffieHellman.BruteForce(DhAlicePublic).Tries;
+
+    [RelayCommand]
+    private void AdjustDhSecret(string parameter)
+    {
+        // parameter is "a+", "a-", "b+" or "b-"
+        var delta = parameter.EndsWith('+') ? 1 : -1;
+        if (parameter.StartsWith('a')) DhSecretA += delta; else DhSecretB += delta;
+        OnPropertyChanged(nameof(DhSecretA));
+        OnPropertyChanged(nameof(DhSecretB));
+        OnPropertyChanged(nameof(DhAlicePublic));
+        OnPropertyChanged(nameof(DhBobPublic));
+        OnPropertyChanged(nameof(DhShared));
+        OnPropertyChanged(nameof(DhSharedMatches));
+        OnPropertyChanged(nameof(DhEveSecret));
+        OnPropertyChanged(nameof(DhEveTries));
     }
 
     /// <summary>True only for the one lesson with the bespoke millstone-wheel visual (Lesson 02).</summary>

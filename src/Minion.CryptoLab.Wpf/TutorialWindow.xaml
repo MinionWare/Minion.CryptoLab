@@ -323,6 +323,94 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- ============ Lesson 18: Diffie-Hellman diagram ============ -->
+                        <StackPanel Visibility="{Binding IsDhLesson, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,4,0,24">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Alice -->
+                                <Border Grid.Column="0" BorderThickness="1" BorderBrush="{DynamicResource Era.Line}" CornerRadius="8" Padding="16" Margin="0,0,8,0">
+                                    <StackPanel>
+                                        <TextBlock Text="ALICE" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource Era.Ink}" Margin="0,0,0,10"/>
+                                        <TextBlock Text="SECRET (private)" FontSize="10" Foreground="{DynamicResource Era.Muted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,10">
+                                            <Button Content="-" Width="28" Height="28" Style="{StaticResource Frame.Button.Secondary}" Padding="0"
+                                                    Command="{Binding AdjustDhSecretCommand}" CommandParameter="a-"/>
+                                            <TextBlock Text="{Binding DhSecretA}" FontWeight="Bold" FontSize="20" Width="50" TextAlignment="Center"
+                                                       VerticalAlignment="Center" Foreground="{DynamicResource Era.Accent}"/>
+                                            <Button Content="+" Width="28" Height="28" Style="{StaticResource Frame.Button.Secondary}" Padding="0"
+                                                    Command="{Binding AdjustDhSecretCommand}" CommandParameter="a+"/>
+                                        </StackPanel>
+                                        <TextBlock FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="12" Foreground="{DynamicResource Era.Muted}" TextWrapping="Wrap">
+                                            <Run Text="sends 5^"/><Run Text="{Binding DhSecretA}"/><Run Text=" mod 23 = "/><Run Text="{Binding DhAlicePublic, Mode=OneWay}" FontWeight="Bold" Foreground="{DynamicResource Era.Ink}"/>
+                                        </TextBlock>
+                                        <Border Background="{DynamicResource Era.Accent}" CornerRadius="4" Padding="8,6" Margin="0,10,0,0">
+                                            <TextBlock FontFamily="./Resources/Fonts/#IBM Plex Mono" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource Era.PrimaryButton.Fg}" TextWrapping="Wrap">
+                                                <Run Text="shared = "/><Run Text="{Binding DhBobPublic, Mode=OneWay}"/><Run Text="^"/><Run Text="{Binding DhSecretA}"/><Run Text=" mod 23 = "/><Run Text="{Binding DhShared, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Channel -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="PUBLIC CHANNEL" FontSize="9" Foreground="{DynamicResource Era.Faint}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                    <TextBlock FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="12" Foreground="{DynamicResource Era.Muted}" HorizontalAlignment="Center">
+                                        <Run Text="A "/><Run Text="&#8594;"/>
+                                    </TextBlock>
+                                    <TextBlock FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="12" Foreground="{DynamicResource Era.Muted}" HorizontalAlignment="Center" Margin="0,6,0,0">
+                                        <Run Text="&#8592; B"/>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- Bob -->
+                                <Border Grid.Column="2" BorderThickness="1" BorderBrush="{DynamicResource Era.Line}" CornerRadius="8" Padding="16" Margin="8,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="BOB" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource Era.Ink}" Margin="0,0,0,10"/>
+                                        <TextBlock Text="SECRET (private)" FontSize="10" Foreground="{DynamicResource Era.Muted}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,10">
+                                            <Button Content="-" Width="28" Height="28" Style="{StaticResource Frame.Button.Secondary}" Padding="0"
+                                                    Command="{Binding AdjustDhSecretCommand}" CommandParameter="b-"/>
+                                            <TextBlock Text="{Binding DhSecretB}" FontWeight="Bold" FontSize="20" Width="50" TextAlignment="Center"
+                                                       VerticalAlignment="Center" Foreground="{DynamicResource Era.Accent}"/>
+                                            <Button Content="+" Width="28" Height="28" Style="{StaticResource Frame.Button.Secondary}" Padding="0"
+                                                    Command="{Binding AdjustDhSecretCommand}" CommandParameter="b+"/>
+                                        </StackPanel>
+                                        <TextBlock FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="12" Foreground="{DynamicResource Era.Muted}" TextWrapping="Wrap">
+                                            <Run Text="sends 5^"/><Run Text="{Binding DhSecretB}"/><Run Text=" mod 23 = "/><Run Text="{Binding DhBobPublic, Mode=OneWay}" FontWeight="Bold" Foreground="{DynamicResource Era.Ink}"/>
+                                        </TextBlock>
+                                        <Border Background="{DynamicResource Era.Accent}" CornerRadius="4" Padding="8,6" Margin="0,10,0,0">
+                                            <TextBlock FontFamily="./Resources/Fonts/#IBM Plex Mono" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource Era.PrimaryButton.Fg}" TextWrapping="Wrap">
+                                                <Run Text="shared = "/><Run Text="{Binding DhAlicePublic, Mode=OneWay}"/><Run Text="^"/><Run Text="{Binding DhSecretB}"/><Run Text=" mod 23 = "/><Run Text="{Binding DhShared, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- Eve -->
+                            <Border Margin="0,18,0,0" Padding="14" BorderThickness="1.5" BorderBrush="{DynamicResource Era.Faint}" CornerRadius="8">
+                                <StackPanel>
+                                    <TextBlock FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="12" Foreground="{DynamicResource Era.Muted}" TextWrapping="Wrap">
+                                        <Run Text="EVE: " FontWeight="Bold"/>
+                                        <Run Text="sees p=23, g=5, and Alice's public value "/><Run Text="{Binding DhAlicePublic, Mode=OneWay}"/>
+                                        <Run Text=". Tries secret=1,2,3,... until 5^secret mod 23 matches."/>
+                                    </TextBlock>
+                                    <TextBlock FontFamily="./Resources/Fonts/#IBM Plex Mono" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource Era.Accent}" Margin="0,6,0,0">
+                                        <Run Text="Found secret="/><Run Text="{Binding DhEveSecret, Mode=OneWay}"/><Run Text=" in "/><Run Text="{Binding DhEveTries, Mode=OneWay}"/><Run Text=" tries"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource Era.Faint}">
+                                <Run Text="NOTE: with p this small Eve wins instantly. Real p is 2048+ bits, so the same search would never finish."/>
+                            </TextBlock>
+                        </StackPanel>
+
                         <!-- ============ Lesson 14: salting floppy disks ============ -->
                         <StackPanel Visibility="{Binding IsSaltingLesson, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,4,0,24">
                             <Border Background="{DynamicResource Era.PanelRaised}" CornerRadius="10" Padding="14,10" BorderThickness="1" BorderBrush="{DynamicResource Era.Line}">
