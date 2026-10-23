@@ -22,6 +22,8 @@
             <conv:PartTileBrushConverter x:Key="PartTileBrushConverter"/>
             <conv:PartToMascotConverter x:Key="PartToMascotConverter"/>
             <conv:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
+            <conv:NullableIntToBoolConverter x:Key="NotNullConverter"/>
+            <conv:NullableIntToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

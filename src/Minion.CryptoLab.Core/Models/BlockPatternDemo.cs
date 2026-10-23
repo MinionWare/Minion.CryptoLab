@@ -10,4 +10,9 @@ public sealed class BlockPatternDemo
     public required Func<string, IReadOnlyList<string>> ComputeEcbBlocks { get; init; }
     public required Func<string, IReadOnlyList<string>> ComputeCbcBlocks { get; init; }
     public required Func<string, string> Explain { get; init; }
+
+    /// <summary>Structured per-block data for Lesson 11's bespoke punch-card visual. Null for any
+    /// other lesson that might use BlockPatternDemo in future — those keep the plain hex list.</summary>
+    public Func<string, IReadOnlyList<PunchCard>>? ComputeEcbCards { get; init; }
+    public Func<string, IReadOnlyList<PunchCard>>? ComputeCbcCards { get; init; }
 }

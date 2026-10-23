@@ -171,6 +171,11 @@ public partial class TutorialViewModel : ObservableObject
     public bool HasFrequency => CurrentStep.Frequency != null;
     public bool HasBlockPattern => CurrentStep.BlockPattern != null;
 
+    /// <summary>True only for the one lesson with the bespoke punch-card visual (Lesson 11).</summary>
+    public bool IsEcbCbcLesson => !IsDivider && CurrentStep.Number == "11";
+    public bool ShowGenericBlockPattern => HasBlockPattern && !IsEcbCbcLesson;
+    public int InputByteCount => System.Text.Encoding.UTF8.GetByteCount(DemoInput);
+
     public string? DemoInputLabel => CurrentStep.Demo?.InputLabel ?? CurrentStep.Frequency?.InputLabel ?? CurrentStep.BlockPattern?.InputLabel;
     public string? DemoKeyLabel => CurrentStep.Demo?.KeyLabel;
     public bool HasDemoKey => DemoKeyLabel != null;
@@ -190,6 +195,9 @@ public partial class TutorialViewModel : ObservableObject
     public string BlockPatternExplain => CurrentStep.BlockPattern?.Explain(DemoInput) ?? string.Empty;
     public ObservableCollection<string> EcbBlocks { get; } = new();
     public ObservableCollection<string> CbcBlocks { get; } = new();
+    public ObservableCollection<PunchCard> EcbCards { get; } = new();
+    public ObservableCollection<PunchCard> CbcCards { get; } = new();
+    public int EcbRepeatCount => EcbCards.Count(c => c.RepeatOfBlock != null);
 
     partial void OnNavIndexChanged(int value) => LoadNavState();
 
@@ -242,11 +250,21 @@ public partial class TutorialViewModel : ObservableObject
 
         EcbBlocks.Clear();
         CbcBlocks.Clear();
+        EcbCards.Clear();
+        CbcCards.Clear();
         if (CurrentStep.BlockPattern != null)
         {
             foreach (var b in CurrentStep.BlockPattern.ComputeEcbBlocks(DemoInput)) EcbBlocks.Add(b);
             foreach (var b in CurrentStep.BlockPattern.ComputeCbcBlocks(DemoInput)) CbcBlocks.Add(b);
+            if (CurrentStep.BlockPattern.ComputeEcbCards is { } ecbCards)
+                foreach (var c in ecbCards(DemoInput)) EcbCards.Add(c);
+            if (CurrentStep.BlockPattern.ComputeCbcCards is { } cbcCards)
+                foreach (var c in cbcCards(DemoInput)) CbcCards.Add(c);
         }
+        OnPropertyChanged(nameof(InputByteCount));
+        OnPropertyChanged(nameof(EcbRepeatCount));
+        OnPropertyChanged(nameof(IsEcbCbcLesson));
+        OnPropertyChanged(nameof(ShowGenericBlockPattern));
 
         OnPropertyChanged(nameof(IsCaesarLesson));
         OnPropertyChanged(nameof(ShowGenericCipherDemo));

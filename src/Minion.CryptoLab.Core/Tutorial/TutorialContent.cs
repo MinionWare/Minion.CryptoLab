@@ -761,11 +761,19 @@ public static class TutorialContent
         BlockPattern = new BlockPatternDemo
         {
             InputLabel = "Message (try keeping the repeated phrase to see the pattern)",
-            DefaultInput = "SECRETSECRETSECRETSECRETSECRET!",
+            DefaultInput = "SEND $100 TO BOBSEND $100 TO BOBTHEN STOP.",
             ComputeEcbBlocks = text => ToBlockHexList(ModernCrypto.AesEcbEncrypt(
                 System.Text.Encoding.UTF8.GetBytes(text), ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key"))),
             ComputeCbcBlocks = text => ToBlockHexList(ModernCrypto.AesCbcEncrypt(
                 System.Text.Encoding.UTF8.GetBytes(text), ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key"), ModernCrypto.ZeroIv16)),
+            ComputeEcbCards = text => BuildPunchCards(
+                System.Text.Encoding.UTF8.GetBytes(text),
+                ModernCrypto.AesEcbEncrypt(System.Text.Encoding.UTF8.GetBytes(text), ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key")),
+                detectRepeats: true),
+            ComputeCbcCards = text => BuildPunchCards(
+                System.Text.Encoding.UTF8.GetBytes(text),
+                ModernCrypto.AesCbcEncrypt(System.Text.Encoding.UTF8.GetBytes(text), ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key"), ModernCrypto.ZeroIv16),
+                detectRepeats: false),
             Explain = text =>
             {
                 var ecb = ToBlockHexList(ModernCrypto.AesEcbEncrypt(System.Text.Encoding.UTF8.GetBytes(text), ModernCrypto.DemoKeyFromPassphrase("tutorial-demo-key")));
@@ -834,6 +842,46 @@ public static class TutorialContent
             blocks.Add(Convert.ToHexString(data, i, len).ToLowerInvariant());
         }
         return blocks;
+    }
+
+    /// <summary>Builds Lesson 11's punch cards: the real ciphertext bytes, grouped as 4x8 hex
+    /// digits, alongside the plaintext that produced each block (PKCS7's own padding bytes shown
+    /// as "·" rather than recomputed — this just re-derives where they fall, using the same
+    /// padding length formula PKCS7 always uses, not a separate padding implementation). Drops a
+    /// trailing all-padding block (the ciphertext is one block longer than the message whenever
+    /// the message length is an exact multiple of 16) since it carries no plaintext at all.</summary>
+    private static IReadOnlyList<PunchCard> BuildPunchCards(byte[] plaintext, byte[] ciphertext, bool detectRepeats)
+    {
+        var padLength = 16 - plaintext.Length % 16;
+        var paddedLength = plaintext.Length + padLength;
+        var blockCount = paddedLength / 16;
+        var dropLastBlock = plaintext.Length % 16 == 0; // that block is 100% padding
+
+        var cards = new List<PunchCard>();
+        var seenHex = new Dictionary<string, int>();
+        for (var b = 0; b < blockCount; b++)
+        {
+            if (dropLastBlock && b == blockCount - 1) break;
+
+            var start = b * 16;
+            var realBytes = Math.Max(0, Math.Min(16, plaintext.Length - start));
+            var fragment = realBytes > 0
+                ? System.Text.Encoding.UTF8.GetString(plaintext, start, realBytes) + new string('·', 16 - realBytes)
+                : new string('·', 16);
+
+            var hex = Convert.ToHexString(ciphertext, start, 16).ToLowerInvariant();
+            var grouped = string.Join(" ", Enumerable.Range(0, 4).Select(g => hex.Substring(g * 8, 8)));
+
+            int? repeatOf = null;
+            if (detectRepeats)
+            {
+                if (seenHex.TryGetValue(hex, out var firstBlock)) repeatOf = firstBlock;
+                else seenHex[hex] = b + 1;
+            }
+
+            cards.Add(new PunchCard(b + 1, fragment, grouped, repeatOf));
+        }
+        return cards;
     }
 
     // ---------------------------------------------------------------- 12. Authenticated encryption
