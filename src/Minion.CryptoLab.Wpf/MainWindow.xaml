@@ -50,37 +50,114 @@
             </Grid>
         </Border>
 
-        <!-- ================= WELCOME ================= -->
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="680" Margin="0,40,0,40">
-                <TextBlock Text="🔐" FontSize="64" HorizontalAlignment="Center"/>
-                <TextBlock Text="Minion.CryptoLab" Style="{StaticResource Text.H1}" FontSize="32"
-                           HorizontalAlignment="Center" Margin="0,16,0,6"/>
-                <TextBlock Text="From the decoder-ring basics to key exchange — see exactly how (and why) every step works."
-                           Style="{StaticResource Text.Muted}" FontSize="14" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+        <!-- ================= HOME ================= -->
+        <Grid Grid.Row="2" Background="{DynamicResource Era.Background}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="64"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-                <Border Style="{StaticResource Card}" Margin="0,26,0,0">
-                    <StackPanel>
-                        <TextBlock Text="🛡 Everything here really runs" Style="{StaticResource Text.H2}" FontSize="14"/>
-                        <TextBlock Style="{StaticResource Text.Body}" Margin="0,6,0,0" TextWrapping="Wrap">
-                            Unlike attacking a real system, encrypting or hashing your own practice text is
-                            completely harmless — so every demo in this tutorial runs real, working
-                            cryptography (via .NET's own System.Security.Cryptography) on whatever you type,
-                            live. Nothing is simulated.
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
+            <!-- Top bar -->
+            <Grid Grid.Row="0" Margin="36,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="CryptoLab" VerticalAlignment="Center" FontFamily="./Resources/Fonts/#IBM Plex Sans"
+                           FontWeight="SemiBold" FontSize="18" Foreground="{DynamicResource Era.Ink}"/>
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="0,0,16,0" Foreground="{DynamicResource Era.Muted}" FontSize="13">
+                    <Run Text="{Binding CompletedLessonCount, Mode=OneWay}"/><Run Text=" of "/><Run Text="{Binding TotalLessonCount, Mode=OneWay}"/><Run Text=" lessons"/>
+                </TextBlock>
+                <Button Grid.Column="3" Content="{Binding ContinueLabel}" Style="{StaticResource Frame.Button.Primary}" Click="ContinueButton_Click"/>
+            </Grid>
 
-                <Button Content="🎓  Start the tutorial" Style="{StaticResource Button.Primary}" Padding="22,11"
-                        FontSize="14" HorizontalAlignment="Center" Margin="0,24,0,0" Click="TutorialButton_Click"/>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="36,20,36,36">
+                    <TextBlock Text="Two thousand years of secret-keeping." FontFamily="{DynamicResource Era.DisplayFont}"
+                               FontSize="34" FontWeight="Bold" Foreground="{DynamicResource Era.Ink}" TextWrapping="Wrap"/>
+                    <TextBlock Text="Four eras, 26 lessons, and real cryptography in every demo. Pick an era to see its lessons."
+                               Foreground="{DynamicResource Era.Muted}" FontSize="14" Margin="0,8,0,24" TextWrapping="Wrap"/>
 
-                <Border Style="{StaticResource Card}" Margin="0,30,0,0" Background="{DynamicResource Brush.AccentMuted}">
-                    <TextBlock Style="{StaticResource Text.Body}" TextWrapping="Wrap" FontSize="12">
-                        <Run Text="🚧 Coming next: " FontWeight="Bold"/>
-                        <Run Text="a catalog of real-world cryptographic mistakes (hardcoded keys, reused nonces, ECB in production, unsalted fast-hashed passwords, predictable tokens...) graded Partial-vs-Best just like Minion.InjectionLab, plus a quiz mode. This first release is the full conceptual tutorial — twenty steps, decoder-ring basics through key exchange."/>
-                    </TextBlock>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+                    <!-- Era tiles: each uses PartTileBrushConverter/PartToMascotConverter since all four
+                         eras' colours must show at once here, unlike every other screen. -->
+                    <ItemsControl ItemsSource="{Binding Tiles}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,46,10,0" Padding="18,16" CornerRadius="16" Height="354" VerticalAlignment="Top" Cursor="Hand"
+                                        Background="{Binding Part, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=Background}">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.SelectTileCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                                    </Border.InputBindings>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <Image Grid.Row="0" Source="{Binding Part, Converter={StaticResource PartToMascotConverter}}"
+                                               Width="140" Height="140" Margin="0,-62,0,0" HorizontalAlignment="Center"/>
+                                        <StackPanel Grid.Row="1" Margin="0,14,0,0">
+                                            <TextBlock Text="{Binding Info.Roman, StringFormat='PART {0}'}" FontFamily="./Resources/Fonts/#IBM Plex Sans"
+                                                       FontWeight="SemiBold" FontSize="11"
+                                                       Foreground="{Binding Part, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=Accent}"/>
+                                            <TextBlock Text="{Binding Info.Title}" FontFamily="./Resources/Fonts/#Bricolage Grotesque"
+                                                       FontWeight="Bold" FontSize="24" TextWrapping="Wrap" Margin="0,2,0,6"
+                                                       Foreground="{Binding Part, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=Ink}"/>
+                                            <TextBlock FontSize="12" Margin="0,0,0,8" Foreground="{Binding Part, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=Muted}">
+                                                <Run Text="{Binding Info.Era, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding Info.DateRange, Mode=OneWay}"/>
+                                            </TextBlock>
+                                            <ProgressBar Height="6" Minimum="0" Maximum="1" Value="{Binding ProgressFraction, Mode=OneWay}"
+                                                         Foreground="{Binding Part, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=Accent}"
+                                                         Background="#22000000" BorderThickness="0" Margin="0,8,0,8"/>
+                                            <TextBlock Text="{Binding StatusText}" FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{Binding Part, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=Accent}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Selected-era panel -->
+                    <Border Margin="0,24,0,0" Padding="20" CornerRadius="14" Background="{DynamicResource Era.Panel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="{Binding SelectedPartSummary}" Foreground="{DynamicResource Era.Ink}" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10"/>
+                                <ItemsControl ItemsSource="{Binding SelectedPartLessons}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,8,8" Padding="10,6" CornerRadius="999" Cursor="Hand"
+                                                    Background="{DynamicResource Era.PanelRaised}" BorderThickness="1" BorderBrush="{DynamicResource Era.Line}"
+                                                    MouseLeftButtonUp="LessonPill_Click">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Number}" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="11" Foreground="{DynamicResource Era.Faint}" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="{Binding Title}" FontSize="12" Foreground="{DynamicResource Era.Muted}"/>
+                                                    <TextBlock Text=" ✓" FontSize="12" Foreground="{DynamicResource Era.Accent}" FontWeight="Bold"
+                                                               Visibility="{Binding Done, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <Button Content="{Binding CtaLabel}" Style="{StaticResource Frame.Button.Primary}" Click="TileCta_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </Window>

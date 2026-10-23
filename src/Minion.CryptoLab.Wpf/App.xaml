@@ -18,6 +18,9 @@
             <conv:MultilineToFontConverter x:Key="MultilineToFontConverter"/>
             <conv:HeadingDisplayTextConverter x:Key="HeadingDisplayTextConverter"/>
             <conv:IsHeadingConverter x:Key="IsHeadingConverter"/>
+            <conv:UpperCaseConverter x:Key="UpperCaseConverter"/>
+            <conv:PartTileBrushConverter x:Key="PartTileBrushConverter"/>
+            <conv:PartToMascotConverter x:Key="PartToMascotConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

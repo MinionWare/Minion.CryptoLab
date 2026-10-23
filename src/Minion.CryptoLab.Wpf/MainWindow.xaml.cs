@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using Minion.CryptoLab.Core.Models;
 using Minion.CryptoLab.Wpf.Services;
+using Minion.CryptoLab.Wpf.ViewModels;
 using Minion.Licensing.Updates;
 
 namespace Minion.CryptoLab.Wpf;
@@ -11,21 +12,37 @@ public partial class MainWindow : Window
 {
     private readonly UpdateCheckService _updateCheckService = new("Minion.CryptoLab");
     private UpdateManifest? _pendingUpdateManifest;
+    private readonly HomeViewModel _home = new();
 
     public MainWindow()
     {
         InitializeComponent();
         ThemeService.Apply(Part.Hub);
+        DataContext = _home;
 
         Loaded += (_, _) => { _ = CheckForUpdatesAsync(); };
     }
 
     private void ExitMenuItem_Click(object sender, RoutedEventArgs e) => Close();
 
-    private void TutorialButton_Click(object sender, RoutedEventArgs e)
+    private void TutorialButton_Click(object sender, RoutedEventArgs e) => OpenTutorial(null);
+
+    /// <summary>Opens the tutorial window, optionally jumping straight to a lesson (Home's
+    /// "Continue" button or a tile's CTA) rather than the very first divider.</summary>
+    private void OpenTutorial(int? startAtStepIndex)
     {
-        var tutorial = new TutorialWindow { Owner = this };
+        var tutorial = new TutorialWindow(startAtStepIndex) { Owner = this };
         tutorial.ShowDialog();
+        ThemeService.Apply(Part.Hub);
+    }
+
+    private void ContinueButton_Click(object sender, RoutedEventArgs e) => OpenTutorial(_home.ContinueStepIndex);
+
+    private void TileCta_Click(object sender, RoutedEventArgs e) => OpenTutorial(_home.CtaStepIndex);
+
+    private void LessonPill_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: LessonPill pill }) OpenTutorial(pill.StepIndex);
     }
 
     // Same deploy-time-config pattern as Minion.Agent/Minion.InjectionLab -- empty/missing

@@ -39,11 +39,17 @@ public partial class TutorialViewModel : ObservableObject
 {
     private readonly IReadOnlyList<TutorialStep> _steps = TutorialContent.Create();
     private readonly IReadOnlyList<NavEntry> _nav;
-    private readonly HashSet<int> _completedStepIndices = new();
 
-    public TutorialViewModel()
+    /// <param name="startAtStepIndex">Jumps straight to this lesson, skipping any divider
+    /// (Home's "Continue" or a tile's CTA); null starts at the very beginning (Part I's divider).</param>
+    public TutorialViewModel(int? startAtStepIndex = null)
     {
         _nav = BuildNav(_steps);
+        if (startAtStepIndex is { } target)
+        {
+            var navIdx = _nav.ToList().FindIndex(n => n is LessonNavEntry l && l.StepIndex == target);
+            if (navIdx >= 0) NavIndex = navIdx;
+        }
         LoadNavState();
     }
 
@@ -181,7 +187,7 @@ public partial class TutorialViewModel : ObservableObject
     private void LoadNavState()
     {
         ThemeService.Apply(CurrentPart);
-        if (!IsDivider) _completedStepIndices.Add(CurrentStepIndex);
+        if (!IsDivider) CompletionStore.MarkCompleted(CurrentStep.Number);
 
         DemoInput = CurrentStep.Demo?.DefaultInput ?? CurrentStep.Frequency?.DefaultInput ?? CurrentStep.BlockPattern?.DefaultInput ?? string.Empty;
         DemoKey = CurrentStep.Demo?.DefaultKey ?? string.Empty;
