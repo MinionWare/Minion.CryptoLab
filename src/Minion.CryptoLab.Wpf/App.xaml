@@ -24,6 +24,7 @@
             <conv:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
             <conv:NullableIntToBoolConverter x:Key="NotNullConverter"/>
             <conv:NullableIntToVisibilityConverter x:Key="NotNullToVisibilityConverter"/>
+            <conv:PartToRecapBrushConverter x:Key="PartToRecapBrushConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

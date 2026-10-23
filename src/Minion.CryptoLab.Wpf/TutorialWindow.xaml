@@ -182,8 +182,72 @@
                            MaxHeight="420" Margin="20,0,0,0"/>
                 </Grid>
 
+                <!-- Wrap-up screen (Lesson 20): graffiti + ROT13 reveal, four-part recap. -->
+                <Grid Visibility="{Binding IsWrapUp, Converter={StaticResource BoolToVisibilityConverter}}" Margin="40,30,40,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="520"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" Margin="0,0,24,0">
+                        <Border CornerRadius="10" ClipToBounds="True">
+                            <Grid>
+                                <Image Source="pack://application:,,,/Resources/Mascots/minion-90s-paint.png" Stretch="UniformToFill"/>
+                                <Border VerticalAlignment="Bottom" Height="140">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#0018171C" Offset="0"/>
+                                            <GradientStop Color="#E418171C" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <StackPanel VerticalAlignment="Bottom" Margin="18">
+                                    <TextBlock Text="DECODE THIS" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="11" Foreground="#FFD23F"/>
+                                    <TextBlock Text="LBH QVQ VG" FontFamily="./Resources/Fonts/#Bricolage Grotesque" FontWeight="Bold" FontSize="34" Foreground="White" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="LESSON 20 &#183; COURSE COMPLETE" FontFamily="./Resources/Fonts/#IBM Plex Sans" FontWeight="SemiBold"
+                                   FontSize="12" Foreground="{DynamicResource Era.AccentText}"/>
+                        <TextBlock Text="From stone to signatures." FontFamily="{DynamicResource Era.DisplayFont}" FontWeight="Bold" FontSize="40"
+                                   Foreground="{DynamicResource Era.Ink}" Margin="0,8,0,14" TextWrapping="Wrap"/>
+                        <TextBlock TextWrapping="Wrap" FontSize="14" Foreground="{DynamicResource Era.Muted}" Margin="0,0,0,18">
+                            <Run Text="You've worked through 2,000 years of secret-keeping: ciphers you can break by hand, the bits underneath modern encryption, how secrets are stored, and how strangers come to trust each other."/>
+                        </TextBlock>
+
+                        <ItemsControl ItemsSource="{Binding RecapRows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource Era.Panel}" CornerRadius="8" Padding="12" Margin="0,0,0,10" BorderThickness="3,0,0,0"
+                                            BorderBrush="{Binding Part, Converter={StaticResource PartToRecapBrushConverter}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Image Grid.Column="0" Source="{Binding Part, Converter={StaticResource PartToMascotConverter}}" Width="44" Height="44" Margin="0,0,12,0"/>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock FontWeight="Bold" FontSize="13" Foreground="{DynamicResource Era.Ink}" TextWrapping="Wrap">
+                                                    <Run Text="{Binding Info.Roman}"/><Run Text="  "/><Run Text="{Binding Info.Title}"/><Run Text=" &#183; "/><Run Text="{Binding Info.Era}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource Era.Muted}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="{Binding LessonRange}" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="11"
+                                                       Foreground="{DynamicResource Era.Faint}" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Grid>
+
                 <ScrollViewer Margin="40,30,40,0" VerticalScrollBarVisibility="Auto"
-                              Visibility="{Binding IsDivider, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">
+                              Visibility="{Binding ShowLessonContent, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel>
                         <TextBlock Text="{Binding CurrentStep.Title, Mode=OneWay}" FontFamily="./Resources/Fonts/#IBM Plex Sans"
                                    FontWeight="SemiBold" FontSize="20" Foreground="{DynamicResource Era.Ink}" Margin="0,0,0,12"/>
@@ -636,6 +700,8 @@
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="1" Content="{Binding BackButtonLabel}" Style="{StaticResource Frame.Button.Secondary}"
                         Margin="0,0,10,0" Command="{Binding BackCommand}" IsEnabled="{Binding CanGoBack}"/>
+                <TextBlock Grid.Column="1" Text="Review any lesson" VerticalAlignment="Center" Margin="0,0,180,0" FontSize="12"
+                           Foreground="{DynamicResource Era.Faint}" Visibility="{Binding IsWrapUp, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 <Button Grid.Column="2" Content="{Binding NextButtonLabel, Mode=OneWay}" Style="{StaticResource Frame.Button.Primary}"
                         Command="{Binding NextCommand}"/>
             </Grid>

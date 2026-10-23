@@ -124,6 +124,10 @@ public partial class TutorialViewModel : ObservableObject
     public bool IsDivider => CurrentNav is DividerNavEntry;
     public Part DividerPart => CurrentNav is DividerNavEntry d ? d.Part : Part.Hub;
 
+    /// <summary>True only for the final, bespoke course-complete screen (Lesson 20).</summary>
+    public bool IsWrapUp => !IsDivider && CurrentStep.Number == "20";
+    public bool ShowLessonContent => !IsDivider && !IsWrapUp;
+
     /// <summary>The lesson loaded "underneath" the current nav position — for a divider, this is
     /// the part's first lesson (already preloaded, just not shown yet). 0-based.</summary>
     public int CurrentStepIndex => CurrentNav switch
@@ -155,6 +159,7 @@ public partial class TutorialViewModel : ObservableObject
     public string BackButtonLabel => NavIndex > 0 ? "← " + TitleOf(_nav[NavIndex - 1]) : "← Back";
     public string NextButtonLabel => IsDivider
         ? $"Begin Lesson {CurrentStep.Number} →"
+        : IsWrapUp ? "Start over from Caesar ↺"
         : IsLastNav ? "Start exploring →" : TitleOf(_nav[NavIndex + 1]) + " →";
 
     private string TitleOf(NavEntry entry) => entry switch
@@ -239,6 +244,9 @@ public partial class TutorialViewModel : ObservableObject
 
         OnPropertyChanged(nameof(IsDivider));
         OnPropertyChanged(nameof(DividerPart));
+        OnPropertyChanged(nameof(IsWrapUp));
+        OnPropertyChanged(nameof(ShowLessonContent));
+        if (IsWrapUp) RebuildRecap();
         OnPropertyChanged(nameof(CurrentStep));
         OnPropertyChanged(nameof(CurrentPart));
         OnPropertyChanged(nameof(CurrentPartInfo));
@@ -390,7 +398,8 @@ public partial class TutorialViewModel : ObservableObject
     [RelayCommand]
     private void Next()
     {
-        if (IsLastNav) CloseRequested?.Invoke(this, EventArgs.Empty);
+        if (IsWrapUp) Restart();
+        else if (IsLastNav) CloseRequested?.Invoke(this, EventArgs.Empty);
         else NavIndex++;
     }
 
@@ -407,7 +416,42 @@ public partial class TutorialViewModel : ObservableObject
     private void Close() => CloseRequested?.Invoke(this, EventArgs.Empty);
 
     public event EventHandler? CloseRequested;
+
+    /// <summary>One recap row on the Wrap-up screen: a part's mascot, title, era, one-line summary
+    /// and lesson range ("01-07").</summary>
+    public ObservableCollection<RecapRow> RecapRows { get; } = new();
+
+    private void RebuildRecap()
+    {
+        RecapRows.Clear();
+        string Summary(Part p) => p switch
+        {
+            Part.I => "Caesar to Kasiski",
+            Part.II => "XOR to ChaCha20",
+            Part.III => "Hashing to padding oracles",
+            Part.IV => "Diffie-Hellman to randomness",
+            _ => ""
+        };
+        foreach (var part in new[] { Part.I, Part.II, Part.III, Part.IV })
+        {
+            var lessons = _steps.Where(s => s.Part == part).ToList();
+            var range = lessons.Count > 0 ? $"{lessons[0].Number}-{lessons[^1].Number}" : "";
+            RecapRows.Add(new RecapRow(part, PartInfo.Of(part), Summary(part), range));
+        }
+    }
+
+    /// <summary>Clears all recorded progress and jumps back to the very first divider — the Wrap-up
+    /// screen's "Start over from Caesar" button.</summary>
+    [RelayCommand]
+    private void Restart()
+    {
+        CompletionStore.Reset();
+        NavIndex = 0;
+    }
 }
+
+/// <summary>One recap row on the Wrap-up screen.</summary>
+public sealed record RecapRow(Part Part, PartInfo Info, string Summary, string LessonRange);
 
 /// <summary>One bar in the frequency-analysis chart.</summary>
 public sealed record LetterBar(char Letter, int Count, double Fraction);
