@@ -12,6 +12,7 @@
     <SolidColorBrush x:Key="Era.AccentText" Color="#245A96"/>
     <SolidColorBrush x:Key="Era.Line" Color="#2E24211C"/>
     <SolidColorBrush x:Key="Era.ActiveRow" Color="#1F2F6FB5"/>
+    <SolidColorBrush x:Key="Era.PanelRaised" Color="#FBF8EE"/>
 
     <SolidColorBrush x:Key="Era.PrimaryButton.Bg" Color="#2F6FB5"/>
     <SolidColorBrush x:Key="Era.PrimaryButton.Fg" Color="#FFFFFF"/>

@@ -132,19 +132,55 @@
 
             <!-- ================= CONTENT ================= -->
             <Grid Grid.Row="1">
-                <!-- Divider screen: shown instead of lesson content while IsDivider is true.
-                     TODO (plan step 4): replace this placeholder with the real two-column divider
-                     (copy + mascot + era-styled lesson list) once the sample-lesson controls exist. -->
-                <StackPanel Visibility="{Binding IsDivider, Converter={StaticResource BoolToVisibilityConverter}}"
-                            Margin="40,30,40,0">
-                    <TextBlock Text="{Binding CurrentPartInfo.Title, Converter={StaticResource UpperCaseConverter}}"
-                               FontFamily="./Resources/Fonts/#IBM Plex Sans" FontWeight="SemiBold" FontSize="13"
-                               Foreground="{DynamicResource Era.AccentText}"/>
-                    <TextBlock Text="{Binding CurrentPartInfo.Title}" FontFamily="{DynamicResource Era.DisplayFont}"
-                               FontWeight="Bold" FontSize="48" Foreground="{DynamicResource Era.Ink}" Margin="0,8,0,16"/>
-                    <TextBlock Text="{Binding CurrentPartInfo.Intro}" TextWrapping="Wrap" FontSize="16" MaxWidth="560"
-                               FontFamily="./Resources/Fonts/#IBM Plex Sans" Foreground="{DynamicResource Era.Muted}"/>
-                </StackPanel>
+                <!-- Divider screen: shown instead of lesson content while IsDivider is true. -->
+                <Grid Visibility="{Binding IsDivider, Converter={StaticResource BoolToVisibilityConverter}}" Margin="40,30,40,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="380"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{Binding CurrentPartInfo.Roman, StringFormat='PART {0}'}" Foreground="{DynamicResource Era.AccentText}"
+                                   FontFamily="./Resources/Fonts/#IBM Plex Sans" FontWeight="SemiBold" FontSize="13"/>
+                        <TextBlock Text="{Binding CurrentPartInfo.Title}" FontFamily="{DynamicResource Era.DisplayFont}"
+                                   FontWeight="Bold" FontSize="46" Foreground="{DynamicResource Era.Ink}" Margin="0,6,0,14" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding CurrentPartInfo.Intro}" TextWrapping="Wrap" FontSize="16"
+                                   FontFamily="./Resources/Fonts/#IBM Plex Sans" Foreground="{DynamicResource Era.Muted}" Margin="0,0,0,22"/>
+
+                        <ItemsControl ItemsSource="{Binding DividerLessons}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding DataContext.JumpToLessonCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding JumpStepIndex}" Cursor="Hand" Margin="0,0,10,10" Width="260">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Padding="12,10" CornerRadius="10,0,10,0" Background="{DynamicResource Era.PanelRaised}"
+                                                        BorderThickness="1" BorderBrush="{DynamicResource Era.Line}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="26"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Label}" FontFamily="./Resources/Fonts/#IBM Plex Mono" FontSize="12"
+                                                                   Foreground="{DynamicResource Era.Faint}" VerticalAlignment="Top"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13" TextWrapping="Wrap"
+                                                                   Foreground="{DynamicResource Era.Ink}"/>
+                                                    </Grid>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <Image Grid.Column="1" Source="{DynamicResource Era.Mascot}" Stretch="Uniform" VerticalAlignment="Top"
+                           MaxHeight="420" Margin="20,0,0,0"/>
+                </Grid>
 
                 <ScrollViewer Margin="40,30,40,0" VerticalScrollBarVisibility="Auto"
                               Visibility="{Binding IsDivider, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=Invert}">

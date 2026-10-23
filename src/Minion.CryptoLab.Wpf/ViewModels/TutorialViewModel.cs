@@ -72,9 +72,18 @@ public partial class TutorialViewModel : ObservableObject
     /// Hub-only wrap-up row.</summary>
     public ObservableCollection<SidebarRowVm> SidebarRows { get; } = new();
 
+    /// <summary>The divider screen's own lesson list (that part's lessons, not the sidebar's).</summary>
+    public ObservableCollection<SidebarRowVm> DividerLessons { get; } = new();
+
     private void RebuildSidebar()
     {
         SidebarRows.Clear();
+        DividerLessons.Clear();
+        if (IsDivider)
+        {
+            foreach (var (stepIndex, step) in _steps.Select((s, i) => (StepIndex: i, Step: s)).Where(x => x.Step.Part == DividerPart))
+                DividerLessons.Add(new SidebarRowVm { IsHeader = false, Label = step.Number, Title = step.Title, JumpStepIndex = stepIndex });
+        }
         foreach (var part in new[] { Part.I, Part.II, Part.III, Part.IV })
         {
             var info = PartInfo.Of(part);
