@@ -165,6 +165,9 @@ public partial class TutorialViewModel : ObservableObject
     private TutorialStep FirstLessonOf(Part part) => _steps.First(s => s.Part == part);
 
     public bool HasDemo => CurrentStep.Demo != null;
+
+    /// <summary>The generic Card demo, hidden for the one lesson with a bespoke visual instead.</summary>
+    public bool ShowGenericCipherDemo => HasDemo && !IsCaesarLesson;
     public bool HasFrequency => CurrentStep.Frequency != null;
     public bool HasBlockPattern => CurrentStep.BlockPattern != null;
 
@@ -244,7 +247,39 @@ public partial class TutorialViewModel : ObservableObject
             foreach (var b in CurrentStep.BlockPattern.ComputeEcbBlocks(DemoInput)) EcbBlocks.Add(b);
             foreach (var b in CurrentStep.BlockPattern.ComputeCbcBlocks(DemoInput)) CbcBlocks.Add(b);
         }
+
+        OnPropertyChanged(nameof(IsCaesarLesson));
+        OnPropertyChanged(nameof(ShowGenericCipherDemo));
+        OnPropertyChanged(nameof(CaesarShift));
+        CaesarMapping.Clear();
+        if (IsCaesarLesson)
+        {
+            var used = new HashSet<char>(DemoInput.ToUpperInvariant().Where(char.IsAsciiLetterUpper));
+            var shift = CaesarShift;
+            for (var i = 0; i < 26; i++)
+            {
+                var plain = (char)('A' + i);
+                var cipher = (char)('A' + (i + shift + 26) % 26);
+                CaesarMapping.Add(new CaesarMappingEntry(plain, cipher, used.Contains(plain)));
+            }
+        }
     }
+
+    /// <summary>True only for the one lesson with the bespoke millstone-wheel visual (Lesson 02).</summary>
+    public bool IsCaesarLesson => !IsDivider && CurrentStep.Number == "02";
+
+    /// <summary>The wheel's shift, parsed from the same DemoKey text field the generic Card demo
+    /// uses, so the ↺/↻ buttons and the plain textbox stay in sync automatically.</summary>
+    public int CaesarShift
+    {
+        get => int.TryParse(DemoKey, out var s) && s is >= 1 and <= 26 ? s : 3;
+        set => DemoKey = (((value - 1) % 26 + 26) % 26 + 1).ToString();
+    }
+
+    [RelayCommand]
+    private void TurnWheel(string direction) => CaesarShift += direction == "cw" ? 1 : -1;
+
+    public ObservableCollection<CaesarMappingEntry> CaesarMapping { get; } = new();
 
     [RelayCommand]
     private void Back()
@@ -276,3 +311,7 @@ public partial class TutorialViewModel : ObservableObject
 
 /// <summary>One bar in the frequency-analysis chart.</summary>
 public sealed record LetterBar(char Letter, int Count, double Fraction);
+
+/// <summary>One column of the Caesar wheel's mapping strip: a plain letter above its cipher
+/// letter, highlighted when the plain letter actually appears in the current message.</summary>
+public sealed record CaesarMappingEntry(char Plain, char Cipher, bool Used);

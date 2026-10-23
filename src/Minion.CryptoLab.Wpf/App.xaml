@@ -21,6 +21,7 @@
             <conv:UpperCaseConverter x:Key="UpperCaseConverter"/>
             <conv:PartTileBrushConverter x:Key="PartTileBrushConverter"/>
             <conv:PartToMascotConverter x:Key="PartToMascotConverter"/>
+            <conv:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

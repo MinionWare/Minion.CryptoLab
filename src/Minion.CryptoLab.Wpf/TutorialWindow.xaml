@@ -215,9 +215,51 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
+                        <!-- ============ Lesson 02: Caesar millstone wheel ============ -->
+                        <Grid Margin="0,4,0,24" Visibility="{Binding IsCaesarLesson, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="420"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" MaxWidth="520">
+                                <TextBlock Text="YOUR MESSAGE" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Era.Faint}" Margin="0,0,0,4"/>
+                                <Border Background="#11000000" BorderThickness="0" CornerRadius="6" Padding="14,12">
+                                    <TextBox Text="{Binding DemoInput, UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Background="Transparent"
+                                             FontFamily="./Resources/Fonts/#Cinzel" FontWeight="Bold" FontSize="20" Foreground="{DynamicResource Era.Ink}"/>
+                                </Border>
+                                <TextBlock Text="INSCRIBED" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Era.Faint}" Margin="0,16,0,4"/>
+                                <Border Background="#11000000" BorderThickness="0" CornerRadius="6" Padding="14,12">
+                                    <TextBox Text="{Binding DemoOutput, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                                             FontFamily="./Resources/Fonts/#Cinzel" FontWeight="Bold" FontSize="24" Foreground="{DynamicResource Era.Stone.InscriptionText}"/>
+                                </Border>
+
+                                <!-- Mapping strip: plain letter over its cipher letter, used ones emphasised. -->
+                                <ItemsControl ItemsSource="{Binding CaesarMapping}" Margin="0,24,0,0">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Width="26" Margin="0,0,4,4">
+                                                <TextBlock Text="{Binding Plain}" HorizontalAlignment="Center" FontFamily="./Resources/Fonts/#Cinzel"
+                                                           FontWeight="Bold" FontSize="13"
+                                                           Foreground="{DynamicResource Era.Stone.CarvedText}"
+                                                           Opacity="{Binding Used, Converter={StaticResource BoolToOpacityConverter}}"/>
+                                                <TextBlock Text="{Binding Cipher}" HorizontalAlignment="Center" FontFamily="./Resources/Fonts/#Cinzel"
+                                                           FontWeight="Bold" FontSize="13"
+                                                           Foreground="{DynamicResource Era.Stone.InscriptionText}"
+                                                           Opacity="{Binding Used, Converter={StaticResource BoolToOpacityConverter}}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                            <controls:CaesarWheel Grid.Column="1" Shift="{Binding CaesarShift}" HorizontalAlignment="Center"/>
+                        </Grid>
+
                         <!-- ============ Cipher text-demo ============ -->
                         <Border Margin="0,4,0,24" Padding="18" CornerRadius="10" Background="{DynamicResource Era.ActiveRow}"
-                                Visibility="{Binding HasDemo, Converter={StaticResource BoolToVisibilityConverter}}">
+                                Visibility="{Binding ShowGenericCipherDemo, Converter={StaticResource BoolToVisibilityConverter}}">
                             <StackPanel>
                                 <TextBlock Text="Try it yourself" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource Era.Ink}"/>
                                 <TextBlock Text="{Binding DemoInputLabel, Mode=OneWay}" Foreground="{DynamicResource Era.Muted}" Margin="0,8,0,4"/>
