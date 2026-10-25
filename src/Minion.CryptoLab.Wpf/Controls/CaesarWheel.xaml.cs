@@ -56,9 +56,15 @@ public partial class CaesarWheel : UserControl
                 FontFamily = new FontFamily("./Resources/Fonts/#Cinzel"),
                 FontWeight = FontWeights.Bold,
                 FontSize = plain ? 18 : 16,
+                // Era.Muted/Era.Accent (not the Stone-specific CarvedText/InscriptionText tokens):
+                // those only exist while Era.Stone.xaml happens to be the merged dictionary, and
+                // Loaded can fire before that's true (e.g. this control gets realized while a
+                // different lesson's era is still active) - the Stone-only keys silently resolve
+                // to null forever after since BuildRing only runs once. These two always resolve,
+                // in every era, and happen to be the same colour in Stone anyway.
                 Foreground = plain
-                    ? (Brush)Application.Current.Resources["Era.Stone.CarvedText"]
-                    : (Brush)Application.Current.Resources["Era.Stone.InscriptionText"]
+                    ? (Brush)Application.Current.Resources["Era.Muted"]
+                    : (Brush)Application.Current.Resources["Era.Accent"]
             };
             tb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Canvas.SetLeft(tb, x - tb.DesiredSize.Width / 2);

@@ -11,7 +11,7 @@
         <!-- The wheel itself: a fixed 380x380 area, nothing else shares it. -->
         <Grid Grid.Row="0">
             <!-- Outer ring: carved stone, fixed letters. -->
-            <Ellipse Width="380" Height="380" Stroke="{DynamicResource Era.Stone.CarvedText}" StrokeThickness="1" Opacity=".25"/>
+            <Ellipse Width="380" Height="380" Stroke="{DynamicResource Era.Muted}" StrokeThickness="1" Opacity=".25"/>
             <Canvas x:Name="OuterCanvas" Width="380" Height="380"/>
 
             <!-- Inner disc: rotates with the shift. -->
@@ -36,7 +36,7 @@
                  Polygons independently doesn't reliably line them up. -->
             <Canvas Width="40" Height="38" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-8,0,0">
                 <Polygon Points="0,0 40,0 28,38 12,38" Fill="#8A8578" Stroke="#5A5650" StrokeThickness="1"/>
-                <Polygon Points="14,4 26,4 22,16 18,16" Fill="{DynamicResource Era.Stone.InscriptionText}"/>
+                <Polygon Points="14,4 26,4 22,16 18,16" Fill="{DynamicResource Era.Accent}"/>
             </Canvas>
         </Grid>
 
@@ -45,7 +45,7 @@
             <Button Content="&#x21ba;" Width="42" Height="42" Style="{StaticResource WheelKnobButton}" Margin="0,0,14,0"
                     Command="{Binding DataContext.TurnWheelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="ccw"/>
             <TextBlock Text="TURN THE RING" VerticalAlignment="Center" FontFamily="./Resources/Fonts/#Cinzel" FontSize="10"
-                       Foreground="{DynamicResource Era.Stone.CarvedText}" Margin="0,0,14,0"/>
+                       Foreground="{DynamicResource Era.Muted}" Margin="0,0,14,0"/>
             <Button Content="&#x21bb;" Width="42" Height="42" Style="{StaticResource WheelKnobButton}"
                     Command="{Binding DataContext.TurnWheelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="cw"/>
         </StackPanel>
