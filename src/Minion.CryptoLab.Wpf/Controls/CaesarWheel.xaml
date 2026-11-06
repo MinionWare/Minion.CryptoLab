@@ -8,14 +8,45 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- The wheel itself: a fixed 380x380 area, nothing else shares it. -->
+        <!-- The wheel itself: a fixed 380x380 area, nothing else shares it. Matches the design
+             handoff's reference screenshot (03-part1-lesson02-caesar.png): a real drop shadow
+             lifting the disc off the page, and directional (upper-left) lighting on every layer
+             so it reads as a carved dome rather than a flat painted circle. -->
         <Grid Grid.Row="0">
-            <!-- Outer ring: carved stone, fixed letters. -->
-            <Ellipse Width="380" Height="380" Stroke="{DynamicResource Era.Muted}" StrokeThickness="1" Opacity=".25"/>
+            <Grid.Effect>
+                <DropShadowEffect Color="#000000" Direction="300" ShadowDepth="10" BlurRadius="28" Opacity=".45"/>
+            </Grid.Effect>
+
+            <!-- Outer ring: carved stone, lit from the upper-left so it reads as a dome, with a
+                 dark bevelled rim at the edge. -->
+            <Ellipse Width="380" Height="380">
+                <Ellipse.Fill>
+                    <RadialGradientBrush GradientOrigin=".35,.3" Center=".5,.5" RadiusX=".75" RadiusY=".75">
+                        <GradientStop Color="#D6D1C5" Offset="0"/>
+                        <GradientStop Color="#A9A396" Offset=".55"/>
+                        <GradientStop Color="#726D61" Offset="1"/>
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+            <Ellipse x:Name="OuterNoise" Width="380" Height="380" Opacity=".28"/>
+            <Ellipse Width="378" Height="378" Stroke="#3E3A32" StrokeThickness="2" Opacity=".55"/>
+            <Ellipse Width="298" Height="298" Stroke="#4A453C" StrokeThickness="1" Opacity=".5"/>
+            <Ellipse Width="296" Height="296" Stroke="#C9A227" StrokeThickness="2" Opacity=".6"/>
             <Canvas x:Name="OuterCanvas" Width="380" Height="380"/>
 
-            <!-- Inner disc: rotates with the shift. -->
-            <Ellipse Width="260" Height="260" Fill="#AAA59A" Opacity=".55"/>
+            <!-- Inner disc: rotates with the shift. Same directional lighting, smaller scale. -->
+            <Ellipse Width="260" Height="260">
+                <Ellipse.Fill>
+                    <RadialGradientBrush GradientOrigin=".35,.3" Center=".5,.5" RadiusX=".75" RadiusY=".75">
+                        <GradientStop Color="#BDB7A9" Offset="0"/>
+                        <GradientStop Color="#938D80" Offset=".55"/>
+                        <GradientStop Color="#615C52" Offset="1"/>
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+            <Ellipse x:Name="InnerNoise" Width="260" Height="260" Opacity=".28"/>
+            <Ellipse Width="258" Height="258" Stroke="#3E3A32" StrokeThickness="1.5" Opacity=".5"/>
+            <Ellipse Width="260" Height="260" Stroke="#C9A227" StrokeThickness="2" Opacity=".55"/>
             <Canvas x:Name="InnerCanvas" Width="380" Height="380" RenderTransformOrigin="0.5,0.5">
                 <Canvas.RenderTransform>
                     <RotateTransform x:Name="InnerRotate"/>
@@ -23,7 +54,16 @@
             </Canvas>
 
             <!-- Hub. -->
-            <Ellipse Width="132" Height="132" Fill="#5A5650"/>
+            <Ellipse Width="132" Height="132">
+                <Ellipse.Fill>
+                    <RadialGradientBrush GradientOrigin=".35,.3" Center=".5,.5" RadiusX=".8" RadiusY=".8">
+                        <GradientStop Color="#6B665E" Offset="0"/>
+                        <GradientStop Color="#2E2B26" Offset="1"/>
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+            <Ellipse Width="132" Height="132" Stroke="#3E3A32" StrokeThickness="2" Opacity=".5"/>
+            <Ellipse Width="134" Height="134" Stroke="#C9A227" StrokeThickness="2" Opacity=".6"/>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="SHIFT" FontFamily="./Resources/Fonts/#Cinzel" FontSize="10" Foreground="#C9C2B4"
                            HorizontalAlignment="Center" Margin="0,0,0,2"/>
@@ -33,9 +73,10 @@
 
             <!-- Pointer: stone keystone at 12 o'clock. Both shapes share one 40-wide Canvas so
                  they're guaranteed to share the same centreline — centering two differently-sized
-                 Polygons independently doesn't reliably line them up. -->
-            <Canvas Width="40" Height="38" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-8,0,0">
-                <Polygon Points="0,0 40,0 28,38 12,38" Fill="#8A8578" Stroke="#5A5650" StrokeThickness="1"/>
+                 Polygons independently doesn't reliably line them up. Was flat-filled at .55 opacity
+                 (washed out, barely visible); now a real stone gradient at full opacity. -->
+            <Canvas Width="40" Height="56" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,-8,0,0">
+                <Polygon Points="0,0 40,0 26,56 14,56" Fill="Transparent" Stroke="#5A5650" StrokeThickness="4"/>
                 <Polygon Points="14,4 26,4 22,16 18,16" Fill="{DynamicResource Era.Accent}"/>
             </Canvas>
         </Grid>
@@ -43,11 +84,11 @@
         <!-- Controls: a normal row below the wheel, not overlapping it. -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
             <Button Content="&#x21ba;" Width="42" Height="42" Style="{StaticResource WheelKnobButton}" Margin="0,0,14,0"
-                    Command="{Binding DataContext.TurnWheelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="ccw"/>
+                    Command="{Binding TurnWheelCommand}" CommandParameter="ccw"/>
             <TextBlock Text="TURN THE RING" VerticalAlignment="Center" FontFamily="./Resources/Fonts/#Cinzel" FontSize="10"
                        Foreground="{DynamicResource Era.Muted}" Margin="0,0,14,0"/>
             <Button Content="&#x21bb;" Width="42" Height="42" Style="{StaticResource WheelKnobButton}"
-                    Command="{Binding DataContext.TurnWheelCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="cw"/>
+                    Command="{Binding TurnWheelCommand}" CommandParameter="cw"/>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -12,8 +12,9 @@ using Minion.CryptoLab.Wpf.Services;
 
 namespace Minion.CryptoLab.Wpf.ViewModels;
 
-/// <summary>One entry in the flattened Back/Next traversal order: either a lesson or the divider
-/// screen shown before the first lesson of a new part.</summary>
+/// <summary>One entry in the flattened curriculum order: either a lesson or the divider screen
+/// shown before the first lesson of a new part. Used to find a lesson's position and to locate
+/// the divider a part's sidebar header should skip past.</summary>
 public abstract record NavEntry;
 public sealed record DividerNavEntry(Part Part) : NavEntry;
 public sealed record LessonNavEntry(int StepIndex) : NavEntry;
@@ -35,8 +36,8 @@ public sealed class SidebarRowVm
 /// <summary>Drives the tutorial: both the per-lesson demos (plain cipher text I/O, a letter-frequency
 /// chart, or an ECB/CBC block-pattern comparison — every demo runs real cryptography on whatever you
 /// type) and navigation across the four-era shell (sidebar, header progress bar, era divider screens,
-/// the era theme itself). Back/Next walk a flattened list of lessons-and-dividers in curriculum order;
-/// the sidebar can also jump straight to any lesson.</summary>
+/// the era theme itself). The sidebar jumps straight to any lesson; Help ▸ Show tutorial opens
+/// at Part I's divider, which links into its lessons.</summary>
 public partial class TutorialViewModel : ObservableObject
 {
     private readonly IReadOnlyList<TutorialStep> _steps = TutorialContent.Create();
@@ -50,6 +51,11 @@ public partial class TutorialViewModel : ObservableObject
         if (startAtStepIndex is { } target)
         {
             var navIdx = _nav.ToList().FindIndex(n => n is LessonNavEntry l && l.StepIndex == target);
+            // Landing on a part's very first lesson (fresh start, or Continue/a tile's CTA moving
+            // into a new part) shows that part's divider screen first instead of skipping straight
+            // past it -- previously the divider was only reachable via Help > Show tutorial with no
+            // saved progress at all, so in practice nobody ever saw it.
+            if (navIdx > 0 && _nav[navIdx - 1] is DividerNavEntry) navIdx--;
             if (navIdx >= 0) NavIndex = navIdx;
         }
         LoadNavState();
@@ -148,28 +154,53 @@ public partial class TutorialViewModel : ObservableObject
     public Part CurrentPart => IsDivider ? DividerPart : CurrentStep.Part;
     public PartInfo? CurrentPartInfo => CurrentPart == Part.Hub ? null : PartInfo.Of(CurrentPart);
 
+    /// <summary>Drives the flanking stone-column decoration around lesson content -- Part I only
+    /// for now; each era can get its own side ornament the same way later.</summary>
+    public bool IsStoneEra => CurrentPart == Part.I;
+
+    /// <summary>Which of the 5 column photos (pristine -&gt; fully collapsed) to show -- advances
+    /// across Part I's 7 lessons so the ruin visibly worsens as the lessons get harder, not a
+    /// fixed decoration. Only meaningful while IsStoneEra.</summary>
+    private int StoneColumnStage => CurrentStep.Number switch
+    {
+        "01" or "02" => 1,
+        "03" or "04" => 2,
+        "05" => 3,
+        "06" => 4,
+        _ => 5
+    };
+
+    public string StoneColumnImage => StoneColumnStage == 5
+        ? "pack://application:,,,/Resources/Decor/StoneColumnFinal.png"
+        : $"pack://application:,,,/Resources/Decor/StoneColumn{StoneColumnStage}.png";
+
+    /// <summary>Only shown under stage 5's ruin cluster (lesson 07) -- a one-line callout tying the
+    /// image to the lesson, not decoration for its own sake.</summary>
+    public string RuinsCaption => "These methods have fallen into ruin — broken by frequency analysis and brute force, the same way these columns gave way to time. Retired, not useless, though: ask the lizard and the mouse who moved in. Modern cryptography is the next part's foundation.";
+    public bool ShowRuinsCaption => StoneColumnStage == 5 && IsStoneEra;
+
+    /// <summary>Stages 1-3 are the upright portrait photos and still flank the lesson content like
+    /// before; stages 4-5 are the toppled landscape photos (pieces lying down) and read much better
+    /// lying across the bottom of the page instead of squeezed into a side column -- the placement
+    /// is meant to vary with how ruined the column is, not sit in one fixed slot every lesson.</summary>
+    public bool ShowFlankingColumns => IsStoneEra && StoneColumnStage <= 3 && CurrentStep.Number != "01";
+    public bool ShowBottomColumn => IsStoneEra && StoneColumnStage >= 4;
+
+    /// <summary>Lesson 01 only -- a complete temple scene (both columns and a pedestal already
+    /// built into the one image), shown instead of the mirrored flanking columns since this lesson
+    /// is mostly empty page otherwise.</summary>
+    public bool ShowTempleScene => IsStoneEra && CurrentStep.Number == "01";
+
+    /// <summary>Lesson 07 (fully collapsed, stage 5) is also the last lesson of Part I and has very
+    /// little demo content on the page, so it gets to be the biggest, most prominent one rather than
+    /// matching stage 4's size.</summary>
+    public double BottomColumnHeight => StoneColumnStage == 5 ? 340 : 190;
+    public double BottomColumnOpacity => StoneColumnStage == 5 ? .4 : .3;
+
     /// <summary>1-based lesson position across all 26 lessons, for "Step N of 26" — stays on the
     /// upcoming lesson's number while a divider is shown.</summary>
     public int LessonPosition => CurrentStepIndex + 1;
     public int StepCount => _steps.Count;
-
-    public bool CanGoBack => NavIndex > 0;
-    private bool IsLastNav => NavIndex == _nav.Count - 1;
-
-    public string BackButtonLabel => NavIndex > 0 ? "← " + TitleOf(_nav[NavIndex - 1]) : "← Back";
-    public string NextButtonLabel => IsDivider
-        ? $"Begin Lesson {CurrentStep.Number} →"
-        : IsWrapUp ? "Start over from Caesar ↺"
-        : IsLastNav ? "Start exploring →" : TitleOf(_nav[NavIndex + 1]) + " →";
-
-    private string TitleOf(NavEntry entry) => entry switch
-    {
-        DividerNavEntry d => $"Begin Lesson {FirstLessonOf(d.Part).Number}",
-        LessonNavEntry l => _steps[l.StepIndex].Title,
-        _ => ""
-    };
-
-    private TutorialStep FirstLessonOf(Part part) => _steps.First(s => s.Part == part);
 
     public bool HasDemo => CurrentStep.Demo != null;
 
@@ -250,11 +281,16 @@ public partial class TutorialViewModel : ObservableObject
         OnPropertyChanged(nameof(CurrentStep));
         OnPropertyChanged(nameof(CurrentPart));
         OnPropertyChanged(nameof(CurrentPartInfo));
+        OnPropertyChanged(nameof(IsStoneEra));
+        OnPropertyChanged(nameof(StoneColumnImage));
+        OnPropertyChanged(nameof(ShowFlankingColumns));
+        OnPropertyChanged(nameof(ShowBottomColumn));
+        OnPropertyChanged(nameof(BottomColumnHeight));
+        OnPropertyChanged(nameof(BottomColumnOpacity));
+        OnPropertyChanged(nameof(ShowRuinsCaption));
+        OnPropertyChanged(nameof(ShowTempleScene));
         OnPropertyChanged(nameof(LessonPosition));
         OnPropertyChanged(nameof(CurrentStepIndex));
-        OnPropertyChanged(nameof(CanGoBack));
-        OnPropertyChanged(nameof(BackButtonLabel));
-        OnPropertyChanged(nameof(NextButtonLabel));
         OnPropertyChanged(nameof(HasDemo));
         OnPropertyChanged(nameof(HasFrequency));
         OnPropertyChanged(nameof(HasBlockPattern));
@@ -389,27 +425,18 @@ public partial class TutorialViewModel : ObservableObject
 
     public ObservableCollection<CaesarMappingEntry> CaesarMapping { get; } = new();
 
-    [RelayCommand]
-    private void Back()
-    {
-        if (CanGoBack) NavIndex--;
-    }
-
-    [RelayCommand]
-    private void Next()
-    {
-        if (IsWrapUp) Restart();
-        else if (IsLastNav) CloseRequested?.Invoke(this, EventArgs.Empty);
-        else NavIndex++;
-    }
-
-    /// <summary>Jumps straight to a lesson from the sidebar, independent of the linear Back/Next
-    /// flow — skips any divider that would normally sit between the current position and it.</summary>
+    /// <summary>Jumps straight to a lesson from the sidebar — skips any divider that would
+    /// otherwise sit between the current position and it.</summary>
     [RelayCommand]
     private void JumpToLesson(int stepIndex)
     {
         var target = _nav.ToList().FindIndex(n => n is LessonNavEntry l && l.StepIndex == stepIndex);
-        if (target >= 0) NavIndex = target;
+        if (target < 0) return;
+        // Coming into a part from somewhere else (sidebar's collapsed part header, or a lesson in a
+        // different part) shows that part's divider first; already sitting on it (or within it) just
+        // jumps straight to the lesson, so clicking a divider's own lesson tiles doesn't loop back.
+        if (target > 0 && _nav[target - 1] is DividerNavEntry && CurrentPart != _steps[stepIndex].Part) target--;
+        NavIndex = target;
     }
 
     [RelayCommand]

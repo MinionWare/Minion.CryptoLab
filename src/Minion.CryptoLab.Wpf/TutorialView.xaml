@@ -1,4 +1,4 @@
-<Window x:Class="Minion.CryptoLab.Wpf.TutorialWindow"
+<UserControl x:Class="Minion.CryptoLab.Wpf.TutorialView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,17 +7,15 @@
         xmlns:conv="clr-namespace:Minion.CryptoLab.Wpf.Converters"
         xmlns:controls="clr-namespace:Minion.CryptoLab.Wpf.Controls"
         mc:Ignorable="d"
-        Title="CryptoLab" Height="860" Width="1140" MinHeight="620" MinWidth="900"
-        WindowStartupLocation="CenterOwner" WindowStyle="SingleBorderWindow" ResizeMode="CanResize"
         Background="{DynamicResource Era.Background}">
-    <Window.Resources>
+    <UserControl.Resources>
         <conv:UpperCaseConverter x:Key="UpperCaseConverter"/>
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
         <!-- One sidebar row: header (expanded with lessons following, or collapsed with a lesson
              count) or a lesson row, already resolved by the ViewModel into SidebarRowVm. -->
         <DataTemplate DataType="{x:Type vm:SidebarRowVm}">
-            <Button Command="{Binding DataContext.JumpToLessonCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+            <Button Command="{Binding DataContext.JumpToLessonCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     CommandParameter="{Binding JumpStepIndex}" Cursor="Hand" Focusable="False"
                     AutomationProperties.Name="{Binding Title}">
                 <Button.Template>
@@ -83,7 +81,7 @@
                 </Button.Template>
             </Button>
         </DataTemplate>
-    </Window.Resources>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -94,7 +92,8 @@
         <!-- ================= SIDEBAR ================= -->
         <Border Grid.Column="0" Background="{DynamicResource Era.SidebarBrush}" BorderBrush="{DynamicResource Era.Line}" BorderThickness="0,0,1,0">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="22,22,22,18">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="22,22,22,18" Cursor="Hand"
+                            MouseLeftButtonUp="Logo_Click" ToolTip="Back to Home">
                     <Image Source="{DynamicResource Era.Icon}" Width="36" Height="36" Stretch="Uniform"/>
                     <TextBlock Text="CryptoLab" Style="{StaticResource Frame.SidebarLogo}" VerticalAlignment="Center" Margin="10,0,0,0"/>
                 </StackPanel>
@@ -109,7 +108,6 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="56"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="68"/>
             </Grid.RowDefinitions>
 
             <!-- ================= HEADER ================= -->
@@ -153,7 +151,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Command="{Binding DataContext.JumpToLessonCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    <Button Command="{Binding DataContext.JumpToLessonCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding JumpStepIndex}" Cursor="Hand" Margin="0,0,10,10" Width="260">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
@@ -243,11 +241,37 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+
+                        <Button Content="Start over from Caesar ↺" Style="{StaticResource Frame.Button.Primary}"
+                                HorizontalAlignment="Left" Margin="0,8,0,0" Command="{Binding RestartCommand}"/>
                     </StackPanel>
                 </Grid>
 
-                <ScrollViewer Margin="40,30,40,0" VerticalScrollBarVisibility="Auto"
-                              Visibility="{Binding ShowLessonContent, Converter={StaticResource BoolToVisibilityConverter}}">
+                <!-- Flanking stone columns around the lesson content, Part I only (IsStoneEra),
+                     a recurring bit of the theme beyond just the Caesar wheel. Each column's Auto
+                     width collapses to 0 when hidden, so other eras get the same full-width content
+                     area as before; the outer 40,30,40,0 margin lives on this Grid so it stays
+                     identical for every era regardless of whether the columns are shown. -->
+                <Grid Margin="40,30,40,0" Visibility="{Binding ShowLessonContent, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Stages 1-3 (upright column): flanks the content, like before. -->
+                    <Image Grid.Column="0" Panel.ZIndex="-1" Source="{Binding StoneColumnImage}" Width="320" Stretch="Uniform" Opacity=".3"
+                           VerticalAlignment="Stretch" Margin="-70,-20,-60,-20"
+                           Visibility="{Binding ShowFlankingColumns, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <Image Grid.Column="2" Panel.ZIndex="-1" Source="{Binding StoneColumnImage}" Width="320" Stretch="Uniform" Opacity=".3"
+                           VerticalAlignment="Stretch" Margin="-60,-20,-70,-20"
+                           Visibility="{Binding ShowFlankingColumns, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Image.LayoutTransform>
+                            <ScaleTransform ScaleX="-1"/>
+                        </Image.LayoutTransform>
+                    </Image>
+
+
+                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="{Binding CurrentStep.Title, Mode=OneWay}" FontFamily="./Resources/Fonts/#IBM Plex Sans"
                                    FontWeight="SemiBold" FontSize="20" Foreground="{DynamicResource Era.Ink}" Margin="0,0,0,12"/>
@@ -687,24 +711,32 @@
                                            Foreground="{DynamicResource Era.Muted}" FontFamily="./Resources/Fonts/#IBM Plex Sans"/>
                             </StackPanel>
                         </Border>
+
+                        <!-- Lesson 01 only: the complete temple scene, filling the open space below
+                             the short intro text instead of the mirrored flanking columns. -->
+                        <Image Margin="0,24,0,0" Source="pack://application:,,,/Resources/Decor/StoneTemple.png" Stretch="Uniform"
+                               MaxHeight="420" Opacity=".75" HorizontalAlignment="Center"
+                               Visibility="{Binding ShowTempleScene, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                        <!-- Stages 4-5 (toppled, landscape photos): sits after the lesson's own content,
+                             in the scrolling flow, instead of pinned to the bottom of the viewport. That
+                             floated over mid-page content on longer lessons (e.g. 06) instead of landing
+                             after it. Stage 5 (lesson 07, almost no other content) is the biggest and
+                             most prominent instead of matching stage 4's size. -->
+                        <StackPanel Margin="0,20,0,0" HorizontalAlignment="Center"
+                                    Visibility="{Binding ShowBottomColumn, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Image Source="{Binding StoneColumnImage}" Stretch="Uniform"
+                                   Height="{Binding BottomColumnHeight}" Opacity="{Binding BottomColumnOpacity}"
+                                   HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding RuinsCaption}" TextWrapping="Wrap" TextAlignment="Center"
+                                       FontFamily="{DynamicResource Era.DisplayFont}" FontStyle="Italic" FontSize="15" MaxWidth="560"
+                                       Foreground="{DynamicResource Era.Muted}" HorizontalAlignment="Center" Margin="0,14,0,0"
+                                       Visibility="{Binding ShowRuinsCaption, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
-            </Grid>
-
-            <!-- ================= FOOTER ================= -->
-            <Grid Grid.Row="2" Margin="36,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Button Grid.Column="1" Content="{Binding BackButtonLabel}" Style="{StaticResource Frame.Button.Secondary}"
-                        Margin="0,0,10,0" Command="{Binding BackCommand}" IsEnabled="{Binding CanGoBack}"/>
-                <TextBlock Grid.Column="1" Text="Review any lesson" VerticalAlignment="Center" Margin="0,0,180,0" FontSize="12"
-                           Foreground="{DynamicResource Era.Faint}" Visibility="{Binding IsWrapUp, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                <Button Grid.Column="2" Content="{Binding NextButtonLabel, Mode=OneWay}" Style="{StaticResource Frame.Button.Primary}"
-                        Command="{Binding NextCommand}"/>
+                </Grid>
             </Grid>
         </Grid>
     </Grid>
-</Window>
+</UserControl>

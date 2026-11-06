@@ -66,6 +66,9 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     private int? continueStepIndex;
 
+    [ObservableProperty]
+    private Part continuePart;
+
     private void Refresh()
     {
         Tiles.Clear();
@@ -93,6 +96,7 @@ public partial class HomeViewModel : ObservableObject
         var nextOverall = _steps.FirstOrDefault(s => !CompletionStore.IsCompleted(s.Number)) ?? _steps[0];
         ContinueStepIndex = _steps.ToList().IndexOf(nextOverall);
         ContinueLabel = $"Continue: {nextOverall.Title} →";
+        ContinuePart = nextOverall.Part;
     }
 
     [RelayCommand]

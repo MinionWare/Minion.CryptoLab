@@ -8,7 +8,11 @@
         Style="{StaticResource BaseWindowStyle}"
         Title="Minion.CryptoLab" Height="760" Width="1100" MinHeight="560" MinWidth="820"
         WindowStartupLocation="CenterScreen" WindowStyle="SingleBorderWindow" ResizeMode="CanResize">
+    <!-- Root: HomeRoot (menu/banner/home) and TutorialHost stacked in the same cell so the
+         tutorial can take over the whole window in place, instead of opening as its own Window
+         that had to be closed to get back to Home or to a different lesson. -->
     <Grid>
+    <Grid x:Name="HomeRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -70,7 +74,9 @@
                 <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="0,0,16,0" Foreground="{DynamicResource Era.Muted}" FontSize="13">
                     <Run Text="{Binding CompletedLessonCount, Mode=OneWay}"/><Run Text=" of "/><Run Text="{Binding TotalLessonCount, Mode=OneWay}"/><Run Text=" lessons"/>
                 </TextBlock>
-                <Button Grid.Column="3" Content="{Binding ContinueLabel}" Style="{StaticResource Frame.Button.Primary}" Click="ContinueButton_Click"/>
+                <Button Grid.Column="3" Content="{Binding ContinueLabel}" Style="{StaticResource Frame.Button.Primary}" Click="ContinueButton_Click"
+                        Background="{Binding ContinuePart, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=Accent}"
+                        Foreground="{Binding ContinuePart, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=ButtonFg}"/>
             </Grid>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -152,12 +158,17 @@
                                 </ItemsControl>
                             </StackPanel>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <Button Content="{Binding CtaLabel}" Style="{StaticResource Frame.Button.Primary}" Click="TileCta_Click"/>
+                                <Button Content="{Binding CtaLabel}" Style="{StaticResource Frame.Button.Primary}" Click="TileCta_Click"
+                                        Background="{Binding SelectedTile.Part, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=Accent}"
+                                        Foreground="{Binding SelectedTile.Part, Converter={StaticResource PartTileBrushConverter}, ConverterParameter=ButtonFg}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
         </Grid>
+    </Grid>
+
+        <local:TutorialView x:Name="TutorialHost" Visibility="Collapsed" HomeRequested="TutorialHost_HomeRequested"/>
     </Grid>
 </Window>

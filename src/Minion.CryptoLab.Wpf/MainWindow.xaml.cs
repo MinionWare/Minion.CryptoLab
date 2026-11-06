@@ -27,12 +27,21 @@ public partial class MainWindow : Window
 
     private void TutorialButton_Click(object sender, RoutedEventArgs e) => OpenTutorial(null);
 
-    /// <summary>Opens the tutorial window, optionally jumping straight to a lesson (Home's
-    /// "Continue" button or a tile's CTA) rather than the very first divider.</summary>
+    /// <summary>Switches the main window over to the tutorial content in place, optionally
+    /// jumping straight to a lesson (Home's "Continue" button or a tile's CTA) rather than the
+    /// very first divider. Used to open a separate modal Window you had to close to get back to
+    /// Home or to a different lesson -- TutorialHost now just takes over this same window.</summary>
     private void OpenTutorial(int? startAtStepIndex)
     {
-        var tutorial = new TutorialWindow(startAtStepIndex) { Owner = this };
-        tutorial.ShowDialog();
+        TutorialHost.Start(startAtStepIndex);
+        HomeRoot.Visibility = Visibility.Collapsed;
+        TutorialHost.Visibility = Visibility.Visible;
+    }
+
+    private void TutorialHost_HomeRequested(object? sender, EventArgs e)
+    {
+        TutorialHost.Visibility = Visibility.Collapsed;
+        HomeRoot.Visibility = Visibility.Visible;
         ThemeService.Apply(Part.Hub);
     }
 

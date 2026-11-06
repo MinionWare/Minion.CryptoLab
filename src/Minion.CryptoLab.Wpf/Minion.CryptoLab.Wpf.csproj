@@ -34,6 +34,24 @@
     <Resource Include="Resources\Mascots\minion-90s-paint.png" />
   </ItemGroup>
 
+  <!-- Part I (Stone) lesson decor: a column that goes from pristine to ruined across the
+       7 lessons, real photo-real stone art supplied by the user (replaces the earlier
+       hand-drawn vector StoneColumn). -->
+  <ItemGroup>
+    <Resource Include="Resources\Decor\StoneColumn1.png" />
+    <Resource Include="Resources\Decor\StoneColumn2.png" />
+    <Resource Include="Resources\Decor\StoneColumn3.png" />
+    <Resource Include="Resources\Decor\StoneColumn4.png" />
+    <Resource Include="Resources\Decor\StoneColumn5.png" />
+    <!-- Lesson 07's own closing image (user-supplied): a whole cluster of ivy-grown, toppled
+         columns, used in place of StoneColumn5 just for the final lesson's ruins callout. -->
+    <Resource Include="Resources\Decor\StoneColumnFinal.png" />
+    <!-- Lesson 01 only: a complete temple scene (both columns already built in, with the cipher
+         wheel on its pedestal). Replaces the mirrored flanking-column treatment for this one
+         lesson, since the lesson has very little text and a lot of open page to fill. -->
+    <Resource Include="Resources\Decor\StoneTemple.png" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
